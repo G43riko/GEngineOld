@@ -1,8 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="res"/>
+	<classpathentry kind="src" path="lib"/>
 	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
 	<classpathentry exported="true" kind="src" path="/GLib"/>
 	<classpathentry exported="true" kind="src" path="/GGLLib"/>
+	<classpathentry exported="true" kind="lib" path="lib/JSON/json-20141113.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/SLICK-UTIL/lib/ibxm.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/SLICK-UTIL/lib/jogg-0.0.7.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/SLICK-UTIL/lib/jorbis-0.0.15.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/SLICK-UTIL/lib/lwjgl_util_applet.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/SLICK-UTIL/lib/lwjgl_util.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/SLICK-UTIL/lib/lwjgl.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/SLICK-UTIL/lib/natives-linux.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/SLICK-UTIL/lib/natives-mac.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/SLICK-UTIL/lib/natives-windows.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/SLICK-UTIL/lib/slick-util-src.zip"/>
+	<classpathentry exported="true" kind="lib" path="lib/SLICK-UTIL/lib/slick-util.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
