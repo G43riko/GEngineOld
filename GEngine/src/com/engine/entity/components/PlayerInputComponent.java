@@ -9,7 +9,7 @@ public class PlayerInputComponent extends Component{
 	
 	@Override
 	public void update(float delta) {
-		PosRotScaleComponent posRotScale = getParent().getComponen(PosRotScaleComponent.class);
+		PosRotScaleComponent posRotScale = getParent().getComponent(PosRotScaleComponent.class);
 		
 		if(posRotScale == null)
 			return;

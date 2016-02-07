@@ -25,13 +25,9 @@ public class RenderingEngine {
 		 */
 	}
 	
-	public void add(Object o){
-		if(o instanceof Entity){
-			Entity e = Entity.class.cast(o);
-			if(e.getComponen(RenderComponent.class) != null){
-				entities.add(e);
-			}
-		}
+	public void add(Entity e){
+		if(e.getComponent(RenderComponent.class) != null)
+			entities.add(e);
 	}
 
 	public void render() {
