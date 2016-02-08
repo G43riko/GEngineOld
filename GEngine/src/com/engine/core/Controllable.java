@@ -1,5 +1,7 @@
 package com.engine.core;
 
+import com.engine.rendering.RenderingEngine;
+
 import glib.interfaces.GControllable;
 import glib.util.analytics.Performance;
 

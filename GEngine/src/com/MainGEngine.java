@@ -2,14 +2,11 @@ package com;
 
 import com.test.GTest;
 import com.test.TestGame;
-import com.voxel.world.World;
 
 public class MainGEngine {
 	
 	public static void main(String[] args) {
-		new World();
 		new MainGEngine();
-		
 	}
 	
 	public MainGEngine(){

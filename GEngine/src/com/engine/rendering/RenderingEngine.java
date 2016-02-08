@@ -1,4 +1,4 @@
-package com.engine.core;
+package com.engine.rendering;
 
 import java.util.ArrayList;
 import java.util.HashMap;

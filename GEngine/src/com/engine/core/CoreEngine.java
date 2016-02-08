@@ -1,5 +1,7 @@
 package com.engine.core;
 
+import com.engine.rendering.RenderingEngine;
+
 import ggllib.GGLConfig;
 import ggllib.core.Input;
 import ggllib.core.Window;

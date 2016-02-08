@@ -5,7 +5,9 @@ import com.engine.core.GameAble;
 import com.engine.entity.Entity;
 
 import glib.data.good.GScene;
-
+import glib.network.tcp_server_client.GClient;
+import glib.network.tcp_server_client.GServer;
+import glib.util.Utils;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
@@ -16,6 +18,7 @@ public class TestGame implements GameAble{
 	
 	public TestGame(Controllable parent) {
 		this.parent = parent;
+		init();
 	}
 	
 	@Override
@@ -25,7 +28,7 @@ public class TestGame implements GameAble{
 	
 	@Override
 	public void update(float delta) {
-		System.out.println("aaa");
+//		System.out.println("aaa");
 //		scene.foreach(a -> a.update(delta));
 	}
 
