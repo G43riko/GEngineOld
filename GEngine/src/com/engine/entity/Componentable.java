@@ -8,8 +8,8 @@ import com.engine.entity.components.LifeComponent;
 import com.engine.entity.components.ModelAndTextureComponent;
 import com.engine.entity.components.PosRotScaleComponent;
 
-import ggllib.object.BorderedModel;
 import ggllib.render.material.Material;
+import ggllib.render.model.BorderedModel;
 import glib.util.GLog;
 import glib.util.vector.GVector3f;
 

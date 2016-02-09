@@ -5,6 +5,7 @@ import com.engine.rendering.RenderingEngine;
 import ggllib.GGLConfig;
 import ggllib.core.Input;
 import ggllib.core.Window;
+import glib.GConfig;
 import glib.cycle.GLoop;
 import glib.interfaces.InteractableGL;
 import glib.util.analytics.Performance;
@@ -13,12 +14,13 @@ public abstract class CoreEngine extends GLoop implements InteractableGL, Contro
 	private Window window;
 	private RenderingEngine renderingEngine;
 	private Performance performance = new Performance();
+	
 	public CoreEngine(){
 		super(GGLConfig.ENGINE_FPS);
 	}
 	
 	public void init(){
-		window = new Window(this, GGLConfig.WINDOW_TITLE, GGLConfig.WINDOW_SIZE, GGLConfig.WINDOW_FULLSCREEN);
+		window = new Window(this, GConfig.WINDOW_TITLE, GConfig.WINDOW_SIZE, GGLConfig.WINDOW_FULLSCREEN);
 		renderingEngine = new RenderingEngine();
 		performance.start();;
 	}
@@ -38,13 +40,12 @@ public abstract class CoreEngine extends GLoop implements InteractableGL, Contro
 	}
 	
 	@Override
-	protected void endSecond() {
+	protected final void endSecond() {
 		performance.endSecond();
-		System.out.println(performance.getLastSecondData());
 	}
 
 	@Override
-	protected void endLoop() {
+	protected final void endLoop() {
 		performance.endLoop();
 	}
 	
@@ -67,12 +68,7 @@ public abstract class CoreEngine extends GLoop implements InteractableGL, Contro
 	//GETTERS
 	
 	@Override
-	public RenderingEngine getRenderingEngine() {
-		return renderingEngine;
-	}
-	
-	@Override
-	public Performance getPerformance() {
-		return performance;
-	}
+	public RenderingEngine getRenderingEngine() {return renderingEngine;}
+	public Performance getPerformance() {return performance;}
+	public Window getWindow() {return window;}
 }
