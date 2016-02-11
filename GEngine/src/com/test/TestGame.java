@@ -11,9 +11,6 @@ import glib.network.tcp_server_client.GClient;
 import glib.network.tcp_server_client.GServer;
 import glib.util.Utils;
 
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL20.*;
-
 public class TestGame implements GameAble{
 	private GScene<Entity> scene;
 	private Controllable parent;
