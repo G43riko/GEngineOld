@@ -2,9 +2,14 @@ package com.engine.core;
 
 import com.engine.rendering.RenderingEngine;
 
+import static org.lwjgl.opengl.GL11.*;
+
+import org.lwjgl.opengl.Display;
+
 import ggllib.GGLConfig;
 import ggllib.core.Input;
 import ggllib.core.Window;
+import ggllib.utils.ContentManager;
 import glib.GConfig;
 import glib.cycle.GLoop;
 import glib.interfaces.InteractableGL;
@@ -14,7 +19,12 @@ public abstract class CoreEngine extends GLoop implements InteractableGL, Contro
 	private Window window;
 	private RenderingEngine renderingEngine;
 	private Performance performance = new Performance();
+	private ContentManager contentManager = new ContentManager();
 	
+	public ContentManager getContentManager() {
+		return contentManager;
+	}
+
 	public CoreEngine(){
 		super(GGLConfig.ENGINE_FPS);
 	}
@@ -37,6 +47,7 @@ public abstract class CoreEngine extends GLoop implements InteractableGL, Contro
 		performance.endUpdate();
 		localRender();
 		performance.endRender();
+		Display.update();
 	}
 	
 	@Override
@@ -50,6 +61,10 @@ public abstract class CoreEngine extends GLoop implements InteractableGL, Contro
 	}
 	
 	private void localRender() {
+
+		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+		glClearColor(1, 0, 0, 1);
+		
 		renderingEngine.render();
 	}
 
