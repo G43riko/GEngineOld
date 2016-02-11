@@ -1,10 +1,10 @@
 package com.engine.core;
 
+
 import org.lwjgl.opengl.Display;
+import static org.lwjgl.opengl.GL11.*;
 
 import com.engine.rendering.RenderingEngine;
-
-import static org.lwjgl.opengl.GL11.*;
 
 import ggllib.GGLConfig;
 import ggllib.core.Input;
