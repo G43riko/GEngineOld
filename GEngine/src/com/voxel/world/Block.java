@@ -1,8 +1,7 @@
 package com.voxel.world;
 
-import com.engine.entity.Entity;
-import com.engine.entity.components.PosRotScaleComponent;
-
+import ggllib.entity.Entity;
+import ggllib.entity.component.PosRotScaleComponent;
 import glib.util.vector.GVector3f;
 
 public class Block extends Entity{

@@ -13,25 +13,30 @@ import ggllib.utils.ContentManager;
 import glib.GConfig;
 import glib.cycle.GLoop;
 import glib.interfaces.InteractableGL;
+import glib.util.GOptions;
 import glib.util.analytics.Performance;
 
 public abstract class CoreEngine extends GLoop implements InteractableGL, Controllable{
-	private Window window;
+	private ContentManager 	contentManager 	= new ContentManager();
+	private Performance 	performance 	= new Performance();
+	private GOptions 		options 		= new GOptions();
 	private RenderingEngine renderingEngine;
-	private Performance performance = new Performance();
-	private ContentManager contentManager = new ContentManager();
+	private Window 			window;
 	
 	public ContentManager getContentManager() {
 		return contentManager;
 	}
 
 	public CoreEngine(){
-		super(GGLConfig.ENGINE_FPS);
+		super(GConfig.ENGINE_FPS);
 	}
 	
 	public void init(){
-		window = new Window(this, GConfig.WINDOW_TITLE, GConfig.WINDOW_SIZE, GGLConfig.WINDOW_FULLSCREEN);
-		renderingEngine = new RenderingEngine();
+		options.load(GConfig.getData(), true);
+		options.load(GGLConfig.getData(), true);
+		
+		window = new Window(this, GConfig.WINDOW_TITLE, GConfig.WINDOW_SIZE, GConfig.WINDOW_FULLSCREEN);
+		renderingEngine = new RenderingEngine(this);
 		performance.start();;
 	}
 
@@ -63,7 +68,6 @@ public abstract class CoreEngine extends GLoop implements InteractableGL, Contro
 	private void localRender() {
 
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-		glClearColor(1, 0, 0, 1);
 		
 		renderingEngine.render();
 	}
@@ -85,5 +89,6 @@ public abstract class CoreEngine extends GLoop implements InteractableGL, Contro
 	@Override
 	public RenderingEngine getRenderingEngine() {return renderingEngine;}
 	public Performance getPerformance() {return performance;}
+	public GOptions getOptions(){return options; }
 	public Window getWindow() {return window;}
 }

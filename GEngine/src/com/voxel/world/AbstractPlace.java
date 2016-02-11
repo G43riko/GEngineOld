@@ -2,8 +2,7 @@ package com.voxel.world;
 
 import java.util.function.Consumer;
 
-import com.engine.entity.Entity;
-
+import ggllib.entity.Entity;
 import glib.util.vector.GVector3f;
 
 public abstract class AbstractPlace<T> extends Entity{

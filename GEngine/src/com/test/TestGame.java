@@ -2,9 +2,9 @@ package com.test;
 
 import com.engine.core.Controllable;
 import com.engine.core.GameAble;
-import com.engine.entity.Entity;
-import com.engine.entity.components.ModelAndTextureComponent;
 
+import ggllib.entity.Entity;
+import ggllib.entity.component.ModelAndTextureComponent;
 import ggllib.render.model.Model;
 import glib.data.good.GScene;
 import glib.network.tcp_server_client.GClient;
@@ -22,8 +22,7 @@ public class TestGame implements GameAble{
 	
 	@Override
 	public void init() {
-		scene = new GScene<Entity>(parent.getRenderingEngine()::add);
-		
+		scene = new GScene<Entity>();
 		float[] vertices = {
 				-0.5f, 0.5f, 0,
 				-0.5f,-0.5f, 0,
@@ -35,7 +34,7 @@ public class TestGame implements GameAble{
 				3, 1, 2
 		};
 		model = parent.getContentManager().getLoader().loadToVAO(vertices, indices);
-		parent.getRenderingEngine().add(model);
+//		parent.getRenderingEngine().add(model);
 	}
 	
 	@Override

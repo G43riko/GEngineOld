@@ -1,7 +1,6 @@
 package com.voxel.world;
 
-import com.engine.entity.components.PosRotScaleComponent;
-
+import ggllib.entity.component.PosRotScaleComponent;
 import glib.util.vector.GVector3f;
 
 public class Chunk extends AbstractPlace<Block>{
