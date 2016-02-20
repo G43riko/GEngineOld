@@ -3,13 +3,21 @@ package com.test;
 import com.engine.core.Controllable;
 import com.engine.core.GameAble;
 
+import ggllib.core.Camera;
+import ggllib.core.Input;
 import ggllib.entity.Entity;
 import ggllib.entity.component.ModelAndTextureComponent;
+import ggllib.entity.component.PosRotScaleComponent;
+import ggllib.render.material.Material;
+import ggllib.render.material.Texture2D;
+import ggllib.render.model.MaterialedModel;
 import ggllib.render.model.Model;
 import glib.data.good.GScene;
+import glib.math.GMath;
 import glib.network.tcp_server_client.GClient;
 import glib.network.tcp_server_client.GServer;
 import glib.util.Utils;
+import glib.util.vector.GVector3f;
 
 public class TestGame implements GameAble{
 	private GScene<Entity> scene;
@@ -22,7 +30,7 @@ public class TestGame implements GameAble{
 	
 	@Override
 	public void init() {
-		scene = new GScene<Entity>();
+		scene = new GScene<Entity>(a -> parent.getRenderingEngine().add(a));
 		float[] vertices = {
 				-0.5f, 0.5f, 0,
 				-0.5f,-0.5f, 0,
@@ -35,17 +43,30 @@ public class TestGame implements GameAble{
 		};
 		model = parent.getContentManager().getLoader().loadToVAO(vertices, indices);
 //		parent.getRenderingEngine().add(model);
+		
+		
+		
+		Texture2D texture = parent.getContentManager().loadTexture("texture.png");
+		MaterialedModel m = new MaterialedModel(parent.getContentManager().loadModel("person.obj"), new Material(texture));
+		for(int i=0 ; i<7000 ; i++){
+			Entity e = new Entity();
+			e.addComponent(new PosRotScaleComponent(new GVector3f(Math.random() * 300, 0, Math.random() * 300)));
+			e.addComponent(new ModelAndTextureComponent(m));
+			parent.getRenderingEngine().add(e);
+		}
 	}
+	
+	
 	
 	@Override
 	public void update(float delta) {
-//		System.out.println("aaa");
-//		scene.foreach(a -> a.update(delta));
-//		parent.getRenderingEngine().render(model);
+		scene.foreach(a -> a.update(delta));
+		System.out.println(parent.getPerformance().getLastSecondData());
 	}
-
+	
+	
 	@Override
 	public void input() {
-//		scene.foreach(a -> a.input());
+		scene.foreach(a -> a.input());
 	}
 }

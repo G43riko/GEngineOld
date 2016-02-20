@@ -1,6 +1,6 @@
 package com.engine.rendering;
 
-import static org.lwjgl.opengl.GL11.glClearColor;
+import static org.lwjgl.opengl.GL11.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,7 +17,6 @@ import com.engine.rendering.shader.EntityShader;
 
 import ggllib.core.Camera;
 import ggllib.entity.Entity;
-import ggllib.entity.component.RenderComponent;
 import ggllib.render.material.Material;
 import ggllib.render.model.BorderedModel;
 import ggllib.render.model.MaterialedModel;
@@ -32,17 +31,18 @@ public class RenderingEngine {
 	private Map<String, GBasicShader> shaders = new HashMap<String, GBasicShader>();
 	private Map<MaterialedModel, List<Entity>> entities = new HashMap<MaterialedModel, List<Entity>>();
 	private CoreEngine parent;
-	private Camera actCamera;
+	private Camera actCamera  = new Camera();
 	
 	public RenderingEngine(CoreEngine parent){
 		this.parent = parent;
 		
 		shaders.put("entityShader", new EntityShader());
 		
-		actCamera = new Camera();
 		setProjectionMatrix(actCamera.getProjectionMatrix());
+		
 		GVector3f bg = parent.getOptions().getBackgroundColor();
 		glClearColor(bg.getX(), bg.getY(), bg.getZ(), 1);
+		
 //		GL11.glViewport(0, 0, parent.getWindow().getWidth(), parent.getWindow().getHeight());
 		/*
 		 * EntityShader
@@ -66,13 +66,11 @@ public class RenderingEngine {
 	public void render(){
 		GBasicShader shader = getShader("entityShader"); 
 		shader.bind();
-		
 		for(MaterialedModel model : entities.keySet()){
 			prepareMaterialedModel(3, model);
 			List<Entity> batch = entities.get(model);
 			for(Entity entity : batch){
 				prepareInstance(shader, entity);
-				
 				GL11.glDrawElements(GL11.GL_TRIANGLES, model.getModel().getVertexCount(),GL11.GL_UNSIGNED_INT, 0);	
 			}
 			
@@ -82,8 +80,21 @@ public class RenderingEngine {
 	
 	//UTILS
 	
+	private void init3D(){
+		glEnable(GL_TEXTURE_2D);
+		glEnable(GL_DEPTH_TEST);
+		
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+		
+		GL11.glEnable(GL11.GL_CULL_FACE);
+		GL11.glCullFace(GL11.GL_BACK);
+	}
+	
 	public void prepare(){
+		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 		setViewMatrix(Maths.createViewMatrix(actCamera.getPosition(), actCamera.getRotation()));
+		init3D();
 	}
 	
 	protected void disableVertex(int num){
@@ -100,6 +111,7 @@ public class RenderingEngine {
 		
 		for(int i=0 ; i<num ; i++)
 			GL20.glEnableVertexAttribArray(i);
+		
 	}
 	
 	private void prepareInstance(GBasicShader shader, Entity entity) {
@@ -109,7 +121,7 @@ public class RenderingEngine {
 	//RENDERERS
 	
 	public void renderObject(Entity entity) {
-		GBasicShader shader = getShader("objectShader"); 
+		GBasicShader shader = getShader("entityShader"); 
 		
 		shader.bind();
 
@@ -135,8 +147,12 @@ public class RenderingEngine {
 
 	//SETTERS
 	
+	public Camera getActCamera() {
+		return actCamera;
+	}
+
 	private void setMaterial(Material material) {
-		getShader("objectShader").connectTextures();
+		getShader("entityShader").connectTextures();
 		
 		if(material.getDiffuse() != null){
 			GL13.glActiveTexture(GL13.GL_TEXTURE0);
@@ -144,8 +160,8 @@ public class RenderingEngine {
 		}
 		
 		
-		getShader("objectShader").updateUniform("specularPower", material.getSpecularPower());
-		getShader("objectShader").updateUniform("specularIntensity", material.getSpecularIntensity());
+		getShader("entityShader").updateUniform("specularPower", material.getSpecularPower());
+		getShader("entityShader").updateUniform("specularIntensity", material.getSpecularIntensity());
 	}
 	
 	private void setViewMatrix(GMatrix4f matrix) {

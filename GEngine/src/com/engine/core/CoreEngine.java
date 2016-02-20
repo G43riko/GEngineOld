@@ -37,7 +37,8 @@ public abstract class CoreEngine extends GLoop implements InteractableGL, Contro
 		
 		window = new Window(this, GConfig.WINDOW_TITLE, GConfig.WINDOW_SIZE, GConfig.WINDOW_FULLSCREEN);
 		renderingEngine = new RenderingEngine(this);
-		performance.start();;
+		performance.start();
+		setVSync(false);
 	}
 
 	protected void cleanUp() {
@@ -66,18 +67,19 @@ public abstract class CoreEngine extends GLoop implements InteractableGL, Contro
 	}
 	
 	private void localRender() {
-
-		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-		
+		renderingEngine.prepare();
 		renderingEngine.render();
 	}
 
 	private void localUpdate(float delta){
 		Input.update();
+		renderingEngine.getActCamera().update(delta);
 		update(delta);
 	}
 
 	private void localInput(){
+		renderingEngine.getActCamera().input();
+		
 		if(Input.isKeyDown(Input.KEY_ESCAPE))
 			stop();
 		
