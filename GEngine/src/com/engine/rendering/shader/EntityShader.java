@@ -22,6 +22,8 @@ public class EntityShader extends GBasicShader{
 		uniforms.put("viewMatrix", super.getUniformLocation("viewMatrix"));
 		
 		uniforms.put("ambient", super.getUniformLocation("ambient"));
+		uniforms.put("plane", super.getUniformLocation("plane"));
+		
 		
 		uniforms.put("specularIntensity", super.getUniformLocation("specularIntensity"));
 		uniforms.put("specularPower", super.getUniformLocation("specularPower"));
