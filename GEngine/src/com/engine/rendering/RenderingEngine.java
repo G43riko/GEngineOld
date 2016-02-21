@@ -24,6 +24,9 @@ import com.engine.water.WaterTile;
 
 import ggllib.core.Camera;
 import ggllib.entity.Entity;
+import ggllib.entity.component.ModelAndTextureComponent;
+import ggllib.entity.component.light.PointLightComponent;
+import ggllib.object.light.PointLight;
 import ggllib.render.material.Material;
 import ggllib.render.model.BorderedModel;
 import ggllib.render.model.MaterialedModel;
@@ -41,9 +44,11 @@ public class RenderingEngine {
 	private Map<MaterialedModel, List<Entity>> entities = new HashMap<MaterialedModel, List<Entity>>();
 	private List<Gui> guis = new ArrayList<Gui>();
 	private List<WaterTile> waters = new ArrayList<WaterTile>();
+	private List<Entity> pointLights = new ArrayList<Entity>();
 	private CoreEngine parent;
 	private Camera actCamera  = new Camera();
 	private GVector4f plane = new GVector4f(0, -1, 0, 15);
+	
 	
 	public RenderingEngine(CoreEngine parent){
 		this.parent = parent;
@@ -74,17 +79,25 @@ public class RenderingEngine {
 	}
 	
 	public void add(Entity entity){
-		MaterialedModel model = entity.getMaterialedModel();
-		if(!entities.containsKey(model))
-			entities.put(model, new ArrayList<Entity>());
-		
-		entities.get(model).add(entity);
-		
+		if(entity.hasComponent(ModelAndTextureComponent.class)){
+			MaterialedModel model = entity.getMaterialedModel();
+			if(!entities.containsKey(model))
+				entities.put(model, new ArrayList<Entity>());
+			
+			entities.get(model).add(entity);
+		}
+		if(entity.hasComponent(PointLightComponent.class)){
+			pointLights.add(entity);
+		}
 	}
 
 	public void add(WaterTile water){
 		waters.add(water);
 	}
+	
+//	public void add(PointLight light){
+//		pointLights.add(light);
+//	}
 	
 	//UTILS
 	
@@ -112,8 +125,11 @@ public class RenderingEngine {
 		GL30.glBindVertexArray(0);
 	}
 
-	private void prepareMaterialedModel(int num, MaterialedModel model) {
+	private void prepareMaterialedModel(int num, MaterialedModel model, GBasicShader shader) {
 		setMaterial(model.getMaterial());
+		
+		shader.updateUniform("specularIntensity", model.getMaterial().getSpecularIntensity());
+		shader.updateUniform("specularPower", model.getMaterial().getSpecularPower());
 		
 		GL30.glBindVertexArray(model.getModel().getVaoID());
 		
@@ -126,9 +142,27 @@ public class RenderingEngine {
 		shader.updateUniform("transformationMatrix", entity.getTransformationMatrix());
 	}
 	
+	private void loadLights(GBasicShader shader){
+		for(int i=0 ; i<EntityShader.MAX_LIGHTS ; i++){
+			if(i < pointLights.size()){
+				shader.updateUniform("lightPosition[" + i +"]", pointLights.get(i).getPosition());
+				shader.updateUniform("lightColor[" + i +"]", pointLights.get(i).getColor());
+				shader.updateUniform("attenuation[" + i +"]", pointLights.get(i).getAttenuation());
+			}
+			else{
+				shader.updateUniform("lightPosition[" + i +"]", new GVector3f());
+				shader.updateUniform("lightColor[" + i +"]", new GVector3f());
+				shader.updateUniform("attenuation[" + i +"]", new GVector3f(1, 0, 0));
+			}
+		}
+	}
+	
 	//RENDERERS
 
 	public void renderWaters(){
+		if(waters.isEmpty())
+			return;
+		
 		GBasicShader shader = shaders.get("waterShader");
 		shader.bind();
 		
@@ -138,6 +172,11 @@ public class RenderingEngine {
 		GL30.glBindVertexArray(WaterTile.getQuad().getVaoID());
 		GL20.glEnableVertexAttribArray(0);
 		shader.updateUniform("cameraPosition", actCamera.getPosition());
+		loadLights(shader);
+		
+//		GL11.glEnable(GL11.GL_BLEND);
+//		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);;
+		
 		for (WaterTile tile : waters) {
 			shader.updateUniform("moveFactor", tile.getMoveFactor());
 			GL13.glActiveTexture(GL13.GL_TEXTURE0);
@@ -146,6 +185,10 @@ public class RenderingEngine {
 			GL11.glBindTexture(GL11.GL_TEXTURE_2D, tile.getFbos().getRefractionTexture());
 			GL13.glActiveTexture(GL13.GL_TEXTURE2);
 			GL11.glBindTexture(GL11.GL_TEXTURE_2D, tile.getDudvTexture().getId());
+			GL13.glActiveTexture(GL13.GL_TEXTURE3);
+			GL11.glBindTexture(GL11.GL_TEXTURE_2D, tile.getNormalTexture().getId());
+			GL13.glActiveTexture(GL13.GL_TEXTURE4);
+			GL11.glBindTexture(GL11.GL_TEXTURE_2D, tile.getFbos().getRefractionDepthTexture());
 			
 			
 			Matrix4f modelMatrix = Maths.createTransformationMatrix(new Vector3f(tile.getX(), 
@@ -179,6 +222,9 @@ public class RenderingEngine {
 	}
 	
 	public void renderGuis(){
+		if(guis.isEmpty())
+			return;
+		
 		GBasicShader shader = shaders.get("guiShader");
 		shader.bind();
 		GL30.glBindVertexArray(Gui.getQuad().getVaoID());
@@ -186,7 +232,7 @@ public class RenderingEngine {
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		
 		//render
-		for(Gui gui:guis){
+		for(Gui gui : guis){
 			GL13.glActiveTexture(GL13.GL_TEXTURE0);
 			gui.getTexture().bind();
 			shader.updateUniform("transformationMatrix", gui.getTransformationMatrix());
@@ -202,28 +248,31 @@ public class RenderingEngine {
 		shader.bind();
 		
 		shader.updateUniform("plane", plane);
+		
+		loadLights(shader);
+		
 		for(MaterialedModel model : entities.keySet()){
-			prepareMaterialedModel(3, model);
+			prepareMaterialedModel(3, model, shader);
 			List<Entity> batch = entities.get(model);
 			for(Entity entity : batch){
 				prepareInstance(shader, entity);
-				GL11.glDrawElements(GL11.GL_TRIANGLES, model.getModel().getVertexCount(),GL11.GL_UNSIGNED_INT, 0);	
+				GL11.glDrawElements(GL11.GL_TRIANGLES, model.getModel().getVertexCount(), GL11.GL_UNSIGNED_INT, 0);	
 			}
 			
 			disableVertex(3);
 		}
 	}
 	
-	public void renderObject(Entity entity) {
-		GBasicShader shader = getShader("entityShader"); 
-		
-		shader.bind();
-
-		shader.updateUniform("transformationMatrix", entity.getTransformationMatrix());
-		setMaterial(entity.getMaterial());
-		
-		disableVertex(3);
-	}
+//	public void renderObject(Entity entity) {
+//		GBasicShader shader = getShader("entityShader"); 
+//		
+//		shader.bind();
+//
+//		shader.updateUniform("transformationMatrix", entity.getTransformationMatrix());
+//		setMaterial(entity.getMaterial());
+//		
+//		disableVertex(3);
+//	}
 	
 	public GVector4f getPlane(){
 		return plane;
@@ -269,7 +318,6 @@ public class RenderingEngine {
 				val.updateUniform("viewMatrix", matrix);
 			}
 		});
-		
 	}
 
 	private void setProjectionMatrix(GMatrix4f projectionMatrix) {

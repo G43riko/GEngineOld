@@ -17,7 +17,13 @@ import com.engine.water.WaterTile;
 import ggllib.GGLConfig;
 import ggllib.core.Input;
 import ggllib.core.Window;
+import ggllib.entity.Entity;
+import ggllib.entity.component.ModelAndTextureComponent;
+import ggllib.entity.component.PosRotScaleComponent;
+import ggllib.object.light.PointLight;
+import ggllib.render.material.Material;
 import ggllib.render.material.Texture2D;
+import ggllib.render.model.MaterialedModel;
 import ggllib.utils.ContentManager;
 import glib.GConfig;
 import glib.cycle.GLoop;
@@ -25,6 +31,7 @@ import glib.interfaces.InteractableGL;
 import glib.util.GOptions;
 import glib.util.analytics.Performance;
 import glib.util.vector.GVector2f;
+import glib.util.vector.GVector3f;
 import sun.misc.FloatingDecimal;
 
 public abstract class CoreEngine extends GLoop implements InteractableGL, Controllable{
@@ -35,7 +42,6 @@ public abstract class CoreEngine extends GLoop implements InteractableGL, Contro
 	private Window 				window;
 	private WaterFrameBuffers 	fbos;
 	private Screen				screen;
-	private WaterTile 			water;
 	
 	public ContentManager getContentManager() {
 		return contentManager;
@@ -54,22 +60,6 @@ public abstract class CoreEngine extends GLoop implements InteractableGL, Contro
 		fbos = new WaterFrameBuffers();
 		screen = new Screen(contentManager.getLoader());
 		renderingEngine = new RenderingEngine(this);
-		
-//		renderingEngine.add(new Gui(getContentManager().getLoader(), 
-//									screen.getTexture(), 
-//									new GVector2f(0.5f, 0.5f), new GVector2f(0.25f, 0.25f)));
-		
-		renderingEngine.add(new Gui(getContentManager().getLoader(), 
-							new Texture2D("fbos", fbos.getReflectionTexture(), new GVector2f(800, 600)), 
-							new GVector2f(-0.5f, 0.5f), new GVector2f(0.25f, 0.25f)));
-		
-		renderingEngine.add(new Gui(getContentManager().getLoader(), 
-							new Texture2D("fbos", fbos.getRefractionTexture(), new GVector2f(800, 600)), 
-							new GVector2f(0.5f, 0.5f), new GVector2f(0.25f, 0.25f)));
-		
-		
-		water = new WaterTile(this, 20, 20, 5, fbos);
-		renderingEngine.add(water);
 		
 		performance.start();
 		setVSync(false);
@@ -107,13 +97,7 @@ public abstract class CoreEngine extends GLoop implements InteractableGL, Contro
 		performance.endLoop();
 	}
 	
-	private void localRender() {
-
-		
-		
-		glEnable(GL30.GL_CLIP_DISTANCE0);
-		
-		
+	private void renderToBuffers(){
 		//REFLECTION
 		float dist = 2 * (renderingEngine.getActCamera().getPosition().getY() - 5);
 		
@@ -139,7 +123,12 @@ public abstract class CoreEngine extends GLoop implements InteractableGL, Contro
 		fbos.unbindCurrentFrameBuffer();
 		
 		glDisable(GL30.GL_CLIP_DISTANCE0);
+	}
+	
+	private void localRender() {
+		renderingEngine.prepare();
 		
+//		renderToBuffers();
 		
 		//NORMAL
 		renderingEngine.getPlane().set(0, -1, 0, 500000);
@@ -155,7 +144,7 @@ public abstract class CoreEngine extends GLoop implements InteractableGL, Contro
 
 	private void localUpdate(float delta){
 		Input.update();
-		water.update(delta);
+//		water.update(delta);
 		renderingEngine.getActCamera().update(delta);
 		update(delta);
 	}

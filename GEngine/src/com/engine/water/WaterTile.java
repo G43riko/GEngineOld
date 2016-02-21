@@ -17,6 +17,7 @@ public class WaterTile {
 	private float moveFactor = 0;
 	
 	private Texture2D dudvTexture;
+	private Texture2D normalTexture;
 	
 	public WaterFrameBuffers getFbos(){
 		return fbos;
@@ -31,10 +32,15 @@ public class WaterTile {
 		
 		
 		dudvTexture = parent.getContentManager().loadTexture("waterDUDV.png");
+		normalTexture = parent.getContentManager().loadTexture("waterNormal.png");
 		
 		this.x = centerX;
 		this.z = centerZ;
 		this.height = height;
+	}
+
+	public Texture2D getNormalTexture(){
+		return normalTexture;
 	}
 
 	public void update(float delta){
