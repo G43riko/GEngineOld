@@ -3,6 +3,7 @@ package com.test;
 import com.engine.core.Controllable;
 import com.engine.core.GameAble;
 
+import ggllib.audio.GAudio;
 import ggllib.core.Camera;
 import ggllib.core.Input;
 import ggllib.entity.Entity;
@@ -23,6 +24,7 @@ public class TestGame implements GameAble{
 	private GScene<Entity> scene;
 	private Controllable parent;
 	private Model model;
+	private GAudio audio;
 	public TestGame(Controllable parent) {
 		this.parent = parent;
 		init();
@@ -44,24 +46,25 @@ public class TestGame implements GameAble{
 		model = parent.getContentManager().getLoader().loadToVAO(vertices, indices);
 //		parent.getRenderingEngine().add(model);
 		
-		
-		
+		audio = parent.getContentManager().loadAudio("audio/air_raid.wav", parent.getRenderingEngine().getActCamera());
+
+		audio.play();
 		Texture2D texture = parent.getContentManager().loadTexture("texture.png");
 		MaterialedModel m = new MaterialedModel(parent.getContentManager().loadModel("person.obj"), new Material(texture));
-		for(int i=0 ; i<7000 ; i++){
+//		for(int i=0 ; i<7000 ; i++){
 			Entity e = new Entity();
-			e.addComponent(new PosRotScaleComponent(new GVector3f(Math.random() * 300, 0, Math.random() * 300)));
+//			e.addComponent(new PosRotScaleComponent(new GVector3f(Math.random() * 300, 0, Math.random() * 300)));
+			e.addComponent(new PosRotScaleComponent(new GVector3f()));
 			e.addComponent(new ModelAndTextureComponent(m));
 			parent.getRenderingEngine().add(e);
-		}
+//		}
 	}
-	
-	
 	
 	@Override
 	public void update(float delta) {
 		scene.foreach(a -> a.update(delta));
-		System.out.println(parent.getPerformance().getLastSecondData());
+		audio.update(delta);
+//		System.out.println(parent.getPerformance().getLastSecondData());
 	}
 	
 	

@@ -4,6 +4,8 @@ package com.engine.core;
 import org.lwjgl.opengl.Display;
 import static org.lwjgl.opengl.GL11.*;
 
+import java.awt.event.WindowEvent;
+
 import com.engine.rendering.RenderingEngine;
 
 import ggllib.GGLConfig;
@@ -41,8 +43,12 @@ public abstract class CoreEngine extends GLoop implements InteractableGL, Contro
 		setVSync(false);
 	}
 
-	protected void cleanUp() {
+	public void cleanUp() {
+		System.out.println("cleanuje sa");
+		contentManager.cleanUp();
+
 		window.cleanUp();
+		window.dispatchEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSING));
 	}
 	
 	@Override
