@@ -24,12 +24,9 @@ public class EntityShader extends GBasicShader{
 		uniforms.put("ambient", super.getUniformLocation("ambient"));
 		uniforms.put("plane", super.getUniformLocation("plane"));
 		
-//		uniforms.put("lightPosition", super.getUniformLocation("lightPosition"));
-//		uniforms.put("lightColor", super.getUniformLocation("lightColor"));
-		
 		for(int i=0 ; i<MAX_LIGHTS ; i++){
 			uniforms.put("attenuation[" + i +"]", super.getUniformLocation("attenuation[" + i +"]"));
-			uniforms.put("lightPosition[" + i +"]", super.getUniformLocation("lightPosition[" + i +"]"));
+			uniforms.put("lightPositionEyeSpace[" + i +"]", super.getUniformLocation("lightPositionEyeSpace[" + i +"]"));
 			uniforms.put("lightColor[" + i +"]", super.getUniformLocation("lightColor[" + i +"]"));
 		}
 		

@@ -17,8 +17,7 @@ uniform mat4 viewMatrix;
 
 uniform vec4 plane;
 
-//uniform vec3 lightPosition[maxLights];
-uniform vec3 lightPositionEySpace[maxLights];
+uniform vec3 lightPositionEyeSpace[maxLights];
 
 uniform int fakeLight;
 
@@ -26,14 +25,13 @@ void main(){
 	vec4 worldPosition = transformationMatrix * vec4(position, 1.0);
 	gl_ClipDistance[0] = dot(worldPosition, plane);
 	mat4 modelViewMatrix = viewMatrix * transformationMatrix;
-	
-	vec4 positionRelativeToCamera = viewMatrix * worldPosition;
+	vec4 positionRelativeToCamera = modelViewMatrix * vec4(position, 1.0);
 	gl_Position = projectionMatrix * positionRelativeToCamera;
 	
 	
 	pass_textureCoords = textureCoords;
 	
-	vec3 surfaceNormal = (transformationMatrix * vec4(normal, 0.0)).xyz;
+	vec3 surfaceNormal = (modelViewMatrix * vec4(normal, 0.0)).xyz;
 	
 	vec3 norm = normalize(surfaceNormal);
 	vec3 tang = normalize((modelViewMatrix * vec4(tangent, 0.0)).xyz);
@@ -46,9 +44,7 @@ void main(){
 	);
 	
 	for(int i=0 ; i<maxLights ; i++)
-		//toLightVector[i] = lightPosition[i] - worldPosition.xyz;
-		toLightVector[i] = toTangentSpace * (lightPositionEySpace[i] - positionRelativeToCamera.xyz); 
+		toLightVector[i] = toTangentSpace * (lightPositionEyeSpace[i] - positionRelativeToCamera.xyz); 
 		
-	//toCameraVector = (inverse(viewMatrix) * vec4(0.0, 0.0, 0.0, 1.0)).xyz - worldPosition.xyz;
 	toCameraVector = toTangentSpace * (-positionRelativeToCamera.xyz);
 }

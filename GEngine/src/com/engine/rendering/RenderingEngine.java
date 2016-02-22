@@ -154,12 +154,12 @@ public class RenderingEngine {
 	private void loadLights(GBasicShader shader){
 		for(int i=0 ; i<EntityShader.MAX_LIGHTS ; i++){
 			if(i < pointLights.size()){
-				shader.updateUniform("lightPosition[" + i +"]", getEyeSpacePosition(pointLights.get(i), viewMatrix));
+				shader.updateUniform("lightPositionEyeSpace[" + i +"]", getEyeSpacePosition(pointLights.get(i), viewMatrix));
 				shader.updateUniform("lightColor[" + i +"]", pointLights.get(i).getColor());
 				shader.updateUniform("attenuation[" + i +"]", pointLights.get(i).getAttenuation());
 			}
 			else{
-				shader.updateUniform("lightPosition[" + i +"]", new GVector3f());
+				shader.updateUniform("lightPositionEyeSpace[" + i +"]", new GVector3f());
 				shader.updateUniform("lightColor[" + i +"]", new GVector3f());
 				shader.updateUniform("attenuation[" + i +"]", new GVector3f(1, 0, 0));
 			}

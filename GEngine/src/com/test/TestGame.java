@@ -32,7 +32,7 @@ public class TestGame implements GameAble{
 //	private Model model;
 	private GAudio audio;
 //	private WaterTile water;
-	private Entity dragon;
+	private Entity dragon, e;
 	
 	public TestGame(Controllable parent) {
 		this.parent = parent;
@@ -76,19 +76,19 @@ public class TestGame implements GameAble{
 		Entity light;
 		
 		light = new Entity();
-		light.addComponent(new PosRotScaleComponent(new GVector3f( 20, 10, 10)));
-		light.addComponent(new PointLightComponent(new GVector3f(0, 0, 1), new GVector3f(1, 0.1, 0.002)));
+		light.addComponent(new PosRotScaleComponent(new GVector3f(2, 0, 3)));
+		light.addComponent(new PointLightComponent(new GVector3f(1)/*, new GVector3f(1, 0.1, 0.002)*/));
 		scene.add(light);
 		
-		light = new Entity();
-		light.addComponent(new PosRotScaleComponent(new GVector3f(-20, 10, 10)));
-		light.addComponent(new PointLightComponent(new GVector3f(1, 0, 0), new GVector3f(1, 0.1, 0.002)));
-		scene.add(light);
-		
-		light = new Entity();
-		light.addComponent(new PosRotScaleComponent(new GVector3f(0, 10, -40)));
-		light.addComponent(new PointLightComponent(new GVector3f(0, 1, 0), new GVector3f(1, 0.1, 0.002)));
-		scene.add(light);
+//		light = new Entity();
+//		light.addComponent(new PosRotScaleComponent(new GVector3f(-2, 0, 3)));
+//		light.addComponent(new PointLightComponent(new GVector3f(1)/*, new GVector3f(1, 0.1, 0.002)*/));
+//		scene.add(light);
+//		
+//		light = new Entity();
+//		light.addComponent(new PosRotScaleComponent(new GVector3f(0, 10, -40)));
+//		light.addComponent(new PointLightComponent(new GVector3f(0, 1, 0)/*, new GVector3f(1, 0.1, 0.002)*/));
+//		scene.add(light);
 		
 		
 		audio = parent.getContentManager().loadAudio("air_raid.wav", parent.getRenderingEngine().getActCamera());
@@ -103,10 +103,10 @@ public class TestGame implements GameAble{
 		scene.add(dragon);
 		
 		
-		m = new MaterialedModel(parent.getContentManager().loadModel("barrel.obj"),
-								new Material(parent.getContentManager().loadTexture("barrel.png"),
-							  				 parent.getContentManager().loadTexture("barrelNormal.png")));
-		Entity e = new Entity();
+		m = new MaterialedModel(parent.getContentManager().loadModel("a.obj"),
+								new Material(parent.getContentManager().loadTexture("texture.png"),
+							  				 parent.getContentManager().loadTexture("textureNormal.png")));
+		e = new Entity();
 		e.addComponent(new PosRotScaleComponent());
 		e.addComponent(new ModelAndTextureComponent(m));
 		scene.add(e);
@@ -116,6 +116,8 @@ public class TestGame implements GameAble{
 	public void update(float delta) {
 		scene.foreach(a -> a.update(delta));
 		audio.update(delta);
+		
+		e.rotate(new GVector3f(0, 0.1, 0));
 		
 		Camera camera = parent.getRenderingEngine().getActCamera();
 		GVector3f ray = camera.getMousePicker().getCurrentRay();

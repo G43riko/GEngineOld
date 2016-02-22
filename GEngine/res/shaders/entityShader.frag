@@ -17,8 +17,7 @@ uniform sampler2D normalSampler;
 
 void main(){
 
-	vec4 normalMapValue = 2.0 * texture(normalSampler, pass_textureCoords, -1.0) - 1.0; 
-	//vec3 unitNormal = normalize(surfaceNormal);
+	vec4 normalMapValue = 2.0 * texture(normalSampler, pass_textureCoords) - 1.0; 
 	vec3 unitNormal = normalize(normalMapValue.rgb);
 	vec3 unitVectorToCamera = normalize(toCameraVector);
 	
@@ -49,4 +48,5 @@ void main(){
 	totalDiffuse = max(totalDiffuse, 0.1);
 	
 	out_Color = vec4(totalDiffuse, 1.0) * texture(textureSampler, pass_textureCoords) + vec4(totalSpecular, 1.0);
+	//out_Color = vec4(toLightVector[0], 1.0);
 }
