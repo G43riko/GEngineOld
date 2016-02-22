@@ -3,6 +3,7 @@
 const int maxLights = 8;
 
 in vec2 pass_textureCoords;
+in vec3 surfaceNormal;
 in vec3 toLightVector[maxLights];
 in vec3 toCameraVector;
 
@@ -13,13 +14,9 @@ uniform vec3 attenuation[maxLights];
 uniform float specularIntensity;
 uniform float specularPower;
 uniform sampler2D textureSampler;
-uniform sampler2D normalSampler;
 
 void main(){
-
-	vec4 normalMapValue = 2.0 * texture(normalSampler, pass_textureCoords, -1.0) - 1.0; 
-	//vec3 unitNormal = normalize(surfaceNormal);
-	vec3 unitNormal = normalize(normalMapValue.rgb);
+	vec3 unitNormal = normalize(surfaceNormal);
 	vec3 unitVectorToCamera = normalize(toCameraVector);
 	
 	vec3 totalDiffuse = vec3(0.0);

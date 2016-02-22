@@ -101,7 +101,15 @@ public class TestGame implements GameAble{
 		dragon.addComponent(new PosRotScaleComponent());
 		dragon.addComponent(new ModelAndTextureComponent(m));
 		scene.add(dragon);
-
+		
+		
+		m = new MaterialedModel(parent.getContentManager().loadModel("barrel.obj"),
+								new Material(parent.getContentManager().loadTexture("barrel.png"),
+							  				 parent.getContentManager().loadTexture("barrelNormal.png")));
+		Entity e = new Entity();
+		e.addComponent(new PosRotScaleComponent());
+		e.addComponent(new ModelAndTextureComponent(m));
+		scene.add(e);
 	}
 	
 	@Override

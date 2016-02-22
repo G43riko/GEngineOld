@@ -13,6 +13,7 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
+import org.lwjgl.util.vector.Vector4f;
 
 import com.engine.core.CoreEngine;
 import com.engine.core.Screen;
@@ -48,6 +49,7 @@ public class RenderingEngine {
 	private CoreEngine parent;
 	private Camera actCamera  = new Camera();
 	private GVector4f plane = new GVector4f(0, -1, 0, 15);
+	private GMatrix4f viewMatrix; 
 	
 	
 	public RenderingEngine(CoreEngine parent){
@@ -128,6 +130,13 @@ public class RenderingEngine {
 	private void prepareMaterialedModel(int num, MaterialedModel model, GBasicShader shader) {
 		setMaterial(model.getMaterial());
 		
+		GL13.glActiveTexture(GL13.GL_TEXTURE0);
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D, model.getMaterial().getDiffuse().getId());
+		
+		if(model.getMaterial().getNormal() != null){
+			GL13.glActiveTexture(GL13.GL_TEXTURE1);
+			GL11.glBindTexture(GL11.GL_TEXTURE_2D, model.getMaterial().getNormal().getId());
+		}
 		shader.updateUniform("specularIntensity", model.getMaterial().getSpecularIntensity());
 		shader.updateUniform("specularPower", model.getMaterial().getSpecularPower());
 		
@@ -145,7 +154,7 @@ public class RenderingEngine {
 	private void loadLights(GBasicShader shader){
 		for(int i=0 ; i<EntityShader.MAX_LIGHTS ; i++){
 			if(i < pointLights.size()){
-				shader.updateUniform("lightPosition[" + i +"]", pointLights.get(i).getPosition());
+				shader.updateUniform("lightPosition[" + i +"]", getEyeSpacePosition(pointLights.get(i), viewMatrix));
 				shader.updateUniform("lightColor[" + i +"]", pointLights.get(i).getColor());
 				shader.updateUniform("attenuation[" + i +"]", pointLights.get(i).getAttenuation());
 			}
@@ -155,6 +164,13 @@ public class RenderingEngine {
 				shader.updateUniform("attenuation[" + i +"]", new GVector3f(1, 0, 0));
 			}
 		}
+	}
+	
+	private GVector3f getEyeSpacePosition(Entity light, GMatrix4f viewMatrix){
+		GVector3f position = light.getPosition();
+        Vector4f eyeSpacePos = new Vector4f(position.getX(), position.getY(), position.getZ(), 1f);
+        Matrix4f.transform(Maths.GMatrixToMatrix(viewMatrix), eyeSpacePos, eyeSpacePos);
+        return new GVector3f(eyeSpacePos.getX(), eyeSpacePos.getY(), eyeSpacePos.getZ());
 	}
 	
 	//RENDERERS
@@ -248,18 +264,18 @@ public class RenderingEngine {
 		shader.bind();
 		
 		shader.updateUniform("plane", plane);
-		
+		shader.connectTextures();
 		loadLights(shader);
 		
 		for(MaterialedModel model : entities.keySet()){
-			prepareMaterialedModel(3, model, shader);
+			prepareMaterialedModel(4, model, shader);
 			List<Entity> batch = entities.get(model);
 			for(Entity entity : batch){
 				prepareInstance(shader, entity);
 				GL11.glDrawElements(GL11.GL_TRIANGLES, model.getModel().getVertexCount(), GL11.GL_UNSIGNED_INT, 0);	
 			}
 			
-			disableVertex(3);
+			disableVertex(4);
 		}
 	}
 	
@@ -312,6 +328,7 @@ public class RenderingEngine {
 	}
 	
 	private void setViewMatrix(GMatrix4f matrix) {
+		this.viewMatrix = matrix;
 		shaders.forEach((key,val) -> {
 			if(val.hasUniform("viewMatrix")){
 				val.bind();

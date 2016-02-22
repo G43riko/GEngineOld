@@ -12,6 +12,7 @@ public class EntityShader extends GBasicShader{
 		bindAttribute(0, "position");
 		bindAttribute(1, "texCoords");
 		bindAttribute(2, "normal");
+		bindAttribute(3, "tangent");
 	}
 
 	@Override
@@ -36,6 +37,13 @@ public class EntityShader extends GBasicShader{
 		uniforms.put("specularPower", super.getUniformLocation("specularPower"));
 		
 		uniforms.put("eyePos", super.getUniformLocation("eyePos"));
+		uniforms.put("normalSampler", super.getUniformLocation("normalSampler"));
+		uniforms.put("textureSampler", super.getUniformLocation("textureSampler"));
 	}
-
+	
+	@Override
+	public void connectTextures(){
+		updateUniform("textureSampler", 0);
+		updateUniform("normalSampler", 1);
+	}
 }
