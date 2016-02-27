@@ -63,11 +63,11 @@ public class ToFrameBufferRendering {
 	}
 	
 	public ToFrameBufferRendering(GVector2f resolution){
-		if (!GLContext.getCapabilities().GL_EXT_framebuffer_object) {
-			GLog.write("FBO nieje podporovaný!!!");
-			System.exit(0);
-		}
-		else {
+//		if (!GLContext.getCapabilities().GL_EXT_framebuffer_object) {
+//			GLog.write("FBO nieje podporovaný!!!");
+//			System.exit(0);
+//		}
+//		else {
 			framebufferID = glGenFramebuffers();
 			
 			glBindFramebuffer(GL_FRAMEBUFFER, framebufferID);
@@ -75,7 +75,7 @@ public class ToFrameBufferRendering {
 			texture = initTexture(resolution);
 
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		}
+//		}
 	}
 	
 	private int initDepthBuffer(GVector2f resolution){

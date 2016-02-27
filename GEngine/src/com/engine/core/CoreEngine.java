@@ -3,6 +3,7 @@ package com.engine.core;
 
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.GL30;
+import org.lwjgl.opengl.GLContext;
 
 import static org.lwjgl.opengl.GL11.*;
 
@@ -40,7 +41,6 @@ public abstract class CoreEngine extends GLoop implements InteractableGL, Contro
 	private GOptions 			options 		= new GOptions();
 	private RenderingEngine 	renderingEngine;
 	private Window 				window;
-	private WaterFrameBuffers 	fbos;
 	private Screen				screen;
 	
 	public ContentManager getContentManager() {
@@ -57,8 +57,10 @@ public abstract class CoreEngine extends GLoop implements InteractableGL, Contro
 		
 		window = new Window(this, GConfig.WINDOW_TITLE, GConfig.WINDOW_SIZE, GConfig.WINDOW_FULLSCREEN);
 		
-		fbos = new WaterFrameBuffers();
-		screen = new Screen(contentManager.getLoader());
+		if(GLContext.getCapabilities().GL_EXT_framebuffer_object)
+			screen = new Screen(contentManager.getLoader());
+		
+		
 		renderingEngine = new RenderingEngine(this);
 		
 		performance.start();
@@ -69,8 +71,8 @@ public abstract class CoreEngine extends GLoop implements InteractableGL, Contro
 	public void cleanUp() {
 		System.out.println("cleanuje sa");
 		contentManager.cleanUp();
-
-		fbos.cleanUp();
+		
+		renderingEngine.cleanUp();
 		
 		window.cleanUp();
 		window.dispatchEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSING));
@@ -97,54 +99,28 @@ public abstract class CoreEngine extends GLoop implements InteractableGL, Contro
 		performance.endLoop();
 	}
 	
-	private void renderToBuffers(){
-		//REFLECTION
-		float dist = 2 * (renderingEngine.getActCamera().getPosition().getY() - 5);
-		
-		renderingEngine.getActCamera().getPosition().addToY(-dist);
-		renderingEngine.getActCamera().invertPitch();
-		renderingEngine.getPlane().set(0, 1, 0, -5);
-
-		renderingEngine.prepare();
-		
-		fbos.bindReflectionFrameBuffer();
-		renderingEngine.render();
-		fbos.unbindCurrentFrameBuffer();
-		
-		renderingEngine.getActCamera().invertPitch();
-		renderingEngine.getActCamera().getPosition().addToY(dist);
-		
-		//REFRACTION
-		renderingEngine.prepare();
-		
-		renderingEngine.getPlane().set(0, -1, 0, 5);
-		fbos.bindRefractionFrameBuffer();
-		renderingEngine.render();
-		fbos.unbindCurrentFrameBuffer();
-		
-		glDisable(GL30.GL_CLIP_DISTANCE0);
-	}
 	
 	private void localRender() {
 		renderingEngine.prepare();
 		
-//		renderToBuffers();
 		
-		//NORMAL
-		renderingEngine.getPlane().set(0, -1, 0, 500000);
-//		screen.startRenderToScreen();
-//		renderingEngine.render();
-//		screen.stopRenderToScreen();
-		
-		renderingEngine.renderWaters();
+		if(GGLConfig.ENGINE_POST_FX && screen != null)
+			screen.startRenderToScreen();
 		
 		renderingEngine.render();
-		renderingEngine.renderGuis();
+		
+		
+		if(GGLConfig.ENGINE_POST_FX && screen != null){
+			screen.stopRenderToScreen();
+			renderingEngine.renderScreen(screen);
+		}
+		
+
+//		renderingEngine.renderGuis();
 	}
 
 	private void localUpdate(float delta){
 		Input.update();
-//		water.update(delta);
 		renderingEngine.getActCamera().update(delta);
 		update(delta);
 	}

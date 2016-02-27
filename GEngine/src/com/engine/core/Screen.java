@@ -31,10 +31,10 @@ public class Screen {
 		frameRenderer = new ToFrameBufferRendering(resolution);
 		texture = frameRenderer.getTexture();
 		position = new GVector2f();
-		scale = new GVector2f(1,1);
+		scale = new GVector2f(1);
 		
 		if(MODEL == null)
-			MODEL = loader.loadToVAO(new float[]{-1,1,-1,-1,1,1,1,-1});
+			MODEL = loader.loadToVAO(new float[]{-1, 1, -1, -1, 1, 1, 1, -1});
 	}
 	
 	//OTHERS

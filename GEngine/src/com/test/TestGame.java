@@ -3,6 +3,8 @@ package com.test;
 import com.engine.core.Controllable;
 import com.engine.core.GameAble;
 import com.engine.gui.Gui;
+import com.engine.gui.PointLightViewer;
+import com.engine.gui.PosRotScaleViewer;
 import com.engine.rendering.RenderingEngine;
 import com.engine.water.WaterFrameBuffers;
 
@@ -22,17 +24,21 @@ import glib.math.GIntersects;
 import glib.math.GMath;
 import glib.network.tcp_server_client.GClient;
 import glib.network.tcp_server_client.GServer;
+import glib.swing.windows.Viewer;
+import glib.swing.windows.WindowViewer;
 import glib.util.Utils;
 import glib.util.vector.GVector2f;
 import glib.util.vector.GVector3f;
 
-public class TestGame implements GameAble{
+public class TestGame extends DefaultTest implements GameAble{
 	private GScene<Entity> scene;
 	private Controllable parent;
 //	private Model model;
 	private GAudio audio;
 //	private WaterTile water;
-	private Entity dragon, e;
+	private Entity dragon, entity;
+	private Viewer viewer;
+	private WindowViewer window;
 	
 	public TestGame(Controllable parent) {
 		this.parent = parent;
@@ -42,53 +48,14 @@ public class TestGame implements GameAble{
 	@Override
 	public void init() {
 		scene = new GScene<Entity>(a -> parent.getRenderingEngine().add(a));
-		
-//		float[] vertices = {
-//				-0.5f, 0.5f, 0,
-//				-0.5f,-0.5f, 0,
-//				 0.5f,-0.5f, 0,
-//				 0.5f, 0.5f, 0
-//		};
-//		int[] indices = {
-//				0, 1, 3,
-//				3, 1, 2
-//		};
-//		model = parent.getContentManager().getLoader().loadToVAO(vertices, indices);
-//		parent.getRenderingEngine().add(model);
-		
-		
-//		renderingEngine.add(new Gui(getContentManager().getLoader(), 
-//							new Texture2D("fbos", fbos.getReflectionTexture(), new GVector2f(800, 600)),
-//							new GVector2f(-0.5f, 0.5f), new GVector2f(0.25f, 0.25f)));
-//		
-//		renderingEngine.add(new Gui(getContentManager().getLoader(), 
-//							new Texture2D("fbos", fbos.getRefractionTexture(), new GVector2f(800, 600)), 
-//							new GVector2f(0.5f, 0.5f), new GVector2f(0.25f, 0.25f)));
-		
-		
-		
-		
-//		water = new WaterTile(this, 20, 20, 5, fbos);
-//		renderingEngine.add(water);
-		
-//		renderingEngine.add(new PointLight(new GVector3f( 20, 10, 10), new GVector3f(1), new GVector3f(1, 0.1, 0.002)));
-//		renderingEngine.add(new PointLight(new GVector3f(-20, 10, 10), new GVector3f(1), new GVector3f(1, 0.1, 0.002)));
+
 		Entity light;
 		
 		light = new Entity();
 		light.addComponent(new PosRotScaleComponent(new GVector3f(2, 0, 3)));
 		light.addComponent(new PointLightComponent(new GVector3f(1)/*, new GVector3f(1, 0.1, 0.002)*/));
 		scene.add(light);
-		
-//		light = new Entity();
-//		light.addComponent(new PosRotScaleComponent(new GVector3f(-2, 0, 3)));
-//		light.addComponent(new PointLightComponent(new GVector3f(1)/*, new GVector3f(1, 0.1, 0.002)*/));
-//		scene.add(light);
-//		
-//		light = new Entity();
-//		light.addComponent(new PosRotScaleComponent(new GVector3f(0, 10, -40)));
-//		light.addComponent(new PointLightComponent(new GVector3f(0, 1, 0)/*, new GVector3f(1, 0.1, 0.002)*/));
-//		scene.add(light);
+
 		
 		
 		audio = parent.getContentManager().loadAudio("air_raid.wav", parent.getRenderingEngine().getActCamera());
@@ -106,10 +73,16 @@ public class TestGame implements GameAble{
 		m = new MaterialedModel(parent.getContentManager().loadModel("a.obj"),
 								new Material(parent.getContentManager().loadTexture("texture.png"),
 							  				 parent.getContentManager().loadTexture("textureNormal.png")));
-		e = new Entity();
-		e.addComponent(new PosRotScaleComponent());
-		e.addComponent(new ModelAndTextureComponent(m));
-		scene.add(e);
+		entity = new Entity();
+		entity.addComponent(new PosRotScaleComponent());
+		entity.addComponent(new ModelAndTextureComponent(m));
+		scene.add(entity);
+		
+		
+//		viewer = new PosRotScaleViewer(light.getComponent(PosRotScaleComponent.class));
+		viewer = new PointLightViewer(light.getComponent(PointLightComponent.class));
+		window = new WindowViewer(viewer);
+		window.setVisible(true);
 	}
 	
 	@Override
@@ -117,7 +90,7 @@ public class TestGame implements GameAble{
 		scene.foreach(a -> a.update(delta));
 		audio.update(delta);
 		
-		e.rotate(new GVector3f(0, 0.1, 0));
+		entity.rotate(new GVector3f(0, 0.1, 0));
 		
 		Camera camera = parent.getRenderingEngine().getActCamera();
 		GVector3f ray = camera.getMousePicker().getCurrentRay();
