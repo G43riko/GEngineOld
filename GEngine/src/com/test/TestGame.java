@@ -5,6 +5,7 @@ import com.engine.core.GameAble;
 import com.engine.gui.Gui;
 import com.engine.gui.PointLightViewer;
 import com.engine.gui.PosRotScaleViewer;
+import com.engine.particles.Particle;
 import com.engine.rendering.RenderingEngine;
 import com.engine.water.WaterFrameBuffers;
 
@@ -100,6 +101,9 @@ public class TestGame extends DefaultTest implements GameAble{
 		float z = y * ray.getZ() + camera.getPosition().getZ();
 		
 		dragon.setPosition(new GVector3f(x, 0, z));
+		
+
+		parent.getRenderingEngine().add(new Particle(dragon.getPosition(), new GVector3f(Math.random() - 0.5, 5, Math.random() - 0.5), 0.1f, 40, 1, 1));
 	}
 	
 	

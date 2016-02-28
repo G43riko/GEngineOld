@@ -17,20 +17,25 @@ import org.lwjgl.util.vector.Vector3f;
 import com.engine.core.CoreEngine;
 import com.engine.core.Screen;
 import com.engine.gui.Gui;
-import com.engine.objects.SkyBox;
+import com.engine.particles.Particle;
+import com.engine.particles.ParticleManager;
 import com.engine.rendering.shader.EntityShader;
 import com.engine.rendering.shader.GuiShader;
+import com.engine.rendering.shader.ParticleShader;
 import com.engine.rendering.shader.PostFxShader;
-import com.engine.rendering.shader.SkyShader;
+import com.engine.rendering.shader.SkyBoxShader;
 import com.engine.rendering.shader.WaterShader;
 import com.engine.water.WaterTile;
 
 import ggllib.entity.Entity;
 import ggllib.entity.component.ModelAndTextureComponent;
 import ggllib.entity.component.light.PointLightComponent;
+import ggllib.object.skybox.SkyBox;
+import ggllib.render.model.BorderedModel;
 import ggllib.render.model.MaterialedModel;
 import ggllib.render.shader.GBasicShader;
 import ggllib.utils.Maths;
+import glib.util.vector.GMatrix4f;
 import glib.util.vector.GVector3f;
 
 public class RenderingEngine extends GRenderingEngine{
@@ -38,6 +43,7 @@ public class RenderingEngine extends GRenderingEngine{
 	private List<Gui> guis = new ArrayList<Gui>();
 	private List<WaterTile> waters = new ArrayList<WaterTile>();
 	private List<Entity> pointLights = new ArrayList<Entity>();
+	private ParticleManager particles;
 	private SkyBox skybox;
 //	private CoreEngine parent;
 	
@@ -48,9 +54,15 @@ public class RenderingEngine extends GRenderingEngine{
 		addShader("waterShader", new WaterShader());
 		addShader("guiShader", new GuiShader());
 		addShader("postFxShader", new PostFxShader());
-		addShader("skyShader", new SkyShader());
+		addShader("particleShader", new ParticleShader());
+//		addShader("skyShader", new SkyShader());
+		addShader("renderSkyBox", new SkyBoxShader());
 		
-		skybox = new SkyBox(getActCamera(), parent.getContentManager().getLoader());
+		particles = new ParticleManager(parent.getContentManager());
+		
+//		skybox = new SkyBox(getActCamera(), parent.getContentManager().getLoader());
+		skybox = new SkyBox(parent.getContentManager(), new GVector3f(1,0,1));
+		
 		setProjectionMatrix(getActCamera().getProjectionMatrix());
 		
 		GVector3f bg = parent.getOptions().getBackgroundColor();
@@ -89,6 +101,10 @@ public class RenderingEngine extends GRenderingEngine{
 		waters.add(water);
 	}
 	
+	public void add(Particle particle){
+		particles.add(particle);
+	}
+	
 //	public void add(PointLight light){
 //		pointLights.add(light);
 //	}
@@ -112,24 +128,67 @@ public class RenderingEngine extends GRenderingEngine{
 	
 	//RENDERERS
 
-	public void renderSky(SkyBox sky){
-		GL11.glDisable(GL11.GL_CULL_FACE);
-//		GL11.glCullFace(GL11.GL_BACK);
-		
-		GL13.glActiveTexture(GL13.GL_TEXTURE0);
-		GBasicShader shader = getShader("skyShader");
+	public void renderParticles(){
+		GBasicShader shader = getShader("particleShader");
 		shader.bind();
 		
+		GMatrix4f vm = Maths.createViewMatrix(getActCamera().getPosition(), getActCamera().getRotation());
 		
-		shader.updateUniform("transformationMatrix", sky.getTransformationMatrix());
+		GL30.glBindVertexArray(ParticleManager.PARTICLE_MODEL.getVaoID());	
+		GL20.glEnableVertexAttribArray(0);
+		GL11.glEnable(GL11.GL_BLEND);
 		
-		prepareMaterialedModel(2, sky.getModel(), shader);
+		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+		GL11.glDepthMask(false);
 		
-		GL11.glDrawElements(GL11.GL_TRIANGLES, sky.getModel().getModel().getVertexCount(),GL11.GL_UNSIGNED_INT, 0);
+		for(Particle p : particles.getParticles()){
+			shader.updateUniform("modelViewMatrix", updateModelViewMatrix(p.getPosition(), p.getRotation(), p.getScale(), vm));
+			GL11.glDrawArrays(GL11.GL_TRIANGLE_STRIP, 0, ParticleManager.PARTICLE_MODEL.getVertexCount());
+		}
 
-		GL11.glEnable(GL11.GL_CULL_FACE);
-		GL11.glCullFace(GL11.GL_BACK);
-		disableVertex(2);
+		GL11.glDepthMask(true);
+		GL11.glDisable(GL11.GL_BLEND);
+		disableVertex(1);
+	}
+	
+//	public void renderSky(SkyBox sky){
+//		GL11.glDisable(GL11.GL_CULL_FACE);
+////		GL11.glCullFace(GL11.GL_BACK);
+//		
+//		GL13.glActiveTexture(GL13.GL_TEXTURE0);
+//		GBasicShader shader = getShader("skyShader");
+//		shader.bind();
+//		
+//		
+//		shader.updateUniform("transformationMatrix", sky.getTransformationMatrix());
+//		
+//		prepareMaterialedModel(2, sky.getModel(), shader);
+//		
+//		GL11.glDrawElements(GL11.GL_TRIANGLES, sky.getModel().getModel().getVertexCount(),GL11.GL_UNSIGNED_INT, 0);
+//
+//		GL11.glEnable(GL11.GL_CULL_FACE);
+//		GL11.glCullFace(GL11.GL_BACK);
+//		disableVertex(2);
+//	}
+//	
+	public void renderSkyBox(SkyBox sky){
+		GBasicShader shader = getShader("renderSkyBox");
+		shader.bind();
+		viewMatrix.set(3, 0, 0);
+		viewMatrix.set(3, 1, 0);
+		viewMatrix.set(3, 2, 0);
+		shader.updateUniform("viewMatrix", viewMatrix);
+		shader.updateUniform("fogColor", sky.getFogColor());
+		
+		
+		GL30.glBindVertexArray(sky.getModel().getVaoID());
+		GL20.glEnableVertexAttribArray(0);
+		GL13.glActiveTexture(GL13.GL_TEXTURE0);
+		GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, sky.getTexture());
+		GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, sky.getModel().getVertexCount());
+		
+		disableVertex(1);
+		
 	}
 	
 	private void renderWaters(){
@@ -245,7 +304,17 @@ public class RenderingEngine extends GRenderingEngine{
 		renderEntities();
 		
 		if(skybox != null)
-			renderSky(skybox);
+			renderSkyBox(skybox);
+		
+		renderParticles();
+		
+	}
+
+	
+	public void update(float delta){
+		getActCamera().update(delta);
+		particles.update(delta);
+		
 	}
 	
 //	private void renderToBuffers(WaterTile water){

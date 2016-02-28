@@ -20,6 +20,7 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GLContext;
 import org.lwjgl.util.vector.Matrix4f;
+import org.lwjgl.util.vector.Vector3f;
 import org.lwjgl.util.vector.Vector4f;
 
 import com.engine.water.WaterFrameBuffers;
@@ -36,7 +37,7 @@ import glib.util.vector.GVector4f;
 
 public abstract class GRenderingEngine {
 	private WaterFrameBuffers 	fbos;
-	private GMatrix4f viewMatrix; 
+	protected GMatrix4f viewMatrix; 
 	private Map<String, GBasicShader> shaders = new HashMap<String, GBasicShader>();
 	private Map<String, Camera> cameras = new HashMap<String, Camera>();
 	private Camera actCamera  = new Camera();
@@ -54,6 +55,25 @@ public abstract class GRenderingEngine {
 	}
 	
 	//UTILS
+	
+	protected GMatrix4f updateModelViewMatrix(GVector3f position, float rotation, float scale, GMatrix4f lViewMatrix){
+		Matrix4f modelMatrix = new Matrix4f();
+		Matrix4f.translate(new Vector3f(position.getX(), position.getY(), position.getZ()), modelMatrix, modelMatrix);
+		modelMatrix.m00 = lViewMatrix.get(0, 0);
+	    modelMatrix.m01 = lViewMatrix.get(1, 0);
+	    modelMatrix.m02 = lViewMatrix.get(2, 0);
+	    modelMatrix.m10 = lViewMatrix.get(0, 1);
+	    modelMatrix.m11 = lViewMatrix.get(1, 1);
+	    modelMatrix.m12 = lViewMatrix.get(2, 1);
+	    modelMatrix.m20 = lViewMatrix.get(0, 2);
+	    modelMatrix.m21 = lViewMatrix.get(1, 2);
+	    modelMatrix.m22 = lViewMatrix.get(2, 2);
+	    
+	    Matrix4f.rotate((float)Math.toRadians(rotation), new Vector3f(0, 0, 1), modelMatrix, modelMatrix);
+	    Matrix4f.scale(new Vector3f(scale, scale, scale), modelMatrix, modelMatrix);
+	    
+	    return Maths.MatrixToGMatrix(Matrix4f.mul(Maths.GMatrixToMatrix(lViewMatrix), modelMatrix, null));
+	}
 	
 	protected void init3D(){
 		glEnable(GL_TEXTURE_2D);

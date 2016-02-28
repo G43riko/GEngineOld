@@ -2,12 +2,11 @@ package com.engine.core;
 
 import org.lwjgl.opengl.Display;
 
-import com.engine.rendering.RenderingEngine;
 import com.engine.rendering.ToFrameBufferRendering;
 
 import ggllib.render.material.Texture2D;
 import ggllib.render.model.BorderedModel;
-import ggllib.utils.Loader;
+import ggllib.utils.ContentManager;
 import ggllib.utils.Maths;
 import glib.util.vector.GMatrix4f;
 import glib.util.vector.GVector2f;
@@ -23,18 +22,18 @@ public class Screen {
 	
 	//CONSTRUCTORS
 	
-	public Screen(Loader loader) {
-		this(loader, new GVector2f(Display.getWidth(), Display.getHeight()));
+	public Screen(ContentManager manager) {
+		this(manager, new GVector2f(Display.getWidth(), Display.getHeight()));
 	}
 	
-	public Screen(Loader loader, GVector2f resolution) {
+	public Screen(ContentManager manager, GVector2f resolution) {
 		frameRenderer = new ToFrameBufferRendering(resolution);
 		texture = frameRenderer.getTexture();
 		position = new GVector2f();
 		scale = new GVector2f(1);
 		
 		if(MODEL == null)
-			MODEL = loader.loadToVAO(new float[]{-1, 1, -1, -1, 1, 1, 1, -1});
+			MODEL = manager.loadGuiModel();
 	}
 	
 	//OTHERS

@@ -4,8 +4,6 @@ import com.engine.core.CoreEngine;
 
 import ggllib.render.material.Texture2D;
 import ggllib.render.model.BorderedModel;
-import ggllib.utils.Loader;
-
 public class WaterTile {
 	private static BorderedModel quad;
 	public static final float TILE_SIZE = 60;
@@ -27,9 +25,9 @@ public class WaterTile {
 	
 	public WaterTile(CoreEngine parent, float centerX, float centerZ, float height, WaterFrameBuffers fbos){
 		this.fbos = fbos;
-		if(quad == null)
-	        quad = parent.getContentManager().getLoader().loadToVAO(new float[]{ -1, -1, -1, 1, 1, -1, 1, -1, -1, 1, 1, 1 }, 2);
 		
+		if(quad == null)
+	        quad = parent.getContentManager().loadWaterPlane();
 		
 		dudvTexture = parent.getContentManager().loadTexture("waterDUDV.png");
 		normalTexture = parent.getContentManager().loadTexture("waterNormal.png");

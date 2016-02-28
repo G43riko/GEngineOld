@@ -58,7 +58,7 @@ public abstract class CoreEngine extends GLoop implements InteractableGL, Contro
 		window = new Window(this, GConfig.WINDOW_TITLE, GConfig.WINDOW_SIZE, GConfig.WINDOW_FULLSCREEN);
 		
 		if(GLContext.getCapabilities().GL_EXT_framebuffer_object)
-			screen = new Screen(contentManager.getLoader());
+			screen = new Screen(contentManager);
 		
 		
 		renderingEngine = new RenderingEngine(this);
@@ -121,7 +121,7 @@ public abstract class CoreEngine extends GLoop implements InteractableGL, Contro
 
 	private void localUpdate(float delta){
 		Input.update();
-		renderingEngine.getActCamera().update(delta);
+		renderingEngine.update(delta);
 		update(delta);
 	}
 
