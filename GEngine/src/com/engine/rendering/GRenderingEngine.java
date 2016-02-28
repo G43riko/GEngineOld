@@ -12,6 +12,7 @@ import static org.lwjgl.opengl.GL11.glClear;
 import static org.lwjgl.opengl.GL11.glEnable;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
@@ -28,6 +29,7 @@ import com.engine.water.WaterFrameBuffers;
 import ggllib.core.Camera;
 import ggllib.entity.Entity;
 import ggllib.render.material.Material;
+import ggllib.render.model.BorderedModel;
 import ggllib.render.model.MaterialedModel;
 import ggllib.render.shader.GBasicShader;
 import ggllib.utils.Maths;
@@ -36,6 +38,7 @@ import glib.util.vector.GVector3f;
 import glib.util.vector.GVector4f;
 
 public abstract class GRenderingEngine {
+	protected Map<MaterialedModel, List<Entity>> entities = new HashMap<MaterialedModel, List<Entity>>();
 	private WaterFrameBuffers 	fbos;
 	protected GMatrix4f viewMatrix; 
 	private Map<String, GBasicShader> shaders = new HashMap<String, GBasicShader>();
@@ -56,23 +59,23 @@ public abstract class GRenderingEngine {
 	
 	//UTILS
 	
-	protected GMatrix4f updateModelViewMatrix(GVector3f position, float rotation, float scale, GMatrix4f lViewMatrix){
+	protected GMatrix4f updateModelViewMatrix(GVector3f position, float rotation, float scale){
 		Matrix4f modelMatrix = new Matrix4f();
 		Matrix4f.translate(new Vector3f(position.getX(), position.getY(), position.getZ()), modelMatrix, modelMatrix);
-		modelMatrix.m00 = lViewMatrix.get(0, 0);
-	    modelMatrix.m01 = lViewMatrix.get(1, 0);
-	    modelMatrix.m02 = lViewMatrix.get(2, 0);
-	    modelMatrix.m10 = lViewMatrix.get(0, 1);
-	    modelMatrix.m11 = lViewMatrix.get(1, 1);
-	    modelMatrix.m12 = lViewMatrix.get(2, 1);
-	    modelMatrix.m20 = lViewMatrix.get(0, 2);
-	    modelMatrix.m21 = lViewMatrix.get(1, 2);
-	    modelMatrix.m22 = lViewMatrix.get(2, 2);
+		modelMatrix.m00 = viewMatrix.get(0, 0);
+	    modelMatrix.m01 = viewMatrix.get(1, 0);
+	    modelMatrix.m02 = viewMatrix.get(2, 0);
+	    modelMatrix.m10 = viewMatrix.get(0, 1);
+	    modelMatrix.m11 = viewMatrix.get(1, 1);
+	    modelMatrix.m12 = viewMatrix.get(2, 1);
+	    modelMatrix.m20 = viewMatrix.get(0, 2);
+	    modelMatrix.m21 = viewMatrix.get(1, 2);
+	    modelMatrix.m22 = viewMatrix.get(2, 2);
 	    
 	    Matrix4f.rotate((float)Math.toRadians(rotation), new Vector3f(0, 0, 1), modelMatrix, modelMatrix);
 	    Matrix4f.scale(new Vector3f(scale, scale, scale), modelMatrix, modelMatrix);
 	    
-	    return Maths.MatrixToGMatrix(Matrix4f.mul(Maths.GMatrixToMatrix(lViewMatrix), modelMatrix, null));
+	    return Maths.MatrixToGMatrix(Matrix4f.mul(Maths.GMatrixToMatrix(viewMatrix), modelMatrix, null));
 	}
 	
 	protected void init3D(){
@@ -86,6 +89,15 @@ public abstract class GRenderingEngine {
 		GL11.glCullFace(GL11.GL_BACK);
 	}
 	
+	protected void disableVertex(int num){
+		for(int i=0 ; i<num ; i++)
+			GL20.glDisableVertexAttribArray(i);
+		
+		GL30.glBindVertexArray(0);
+	}
+	
+	//PREPARERS
+	
 	public void prepare(){
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 		setViewMatrix(Maths.createViewMatrix(actCamera.getPosition(), actCamera.getRotation()));
@@ -96,32 +108,25 @@ public abstract class GRenderingEngine {
 		shader.updateUniform("transformationMatrix", entity.getTransformationMatrix());
 	}
 	
-	protected GVector3f getEyeSpacePosition(Entity light){
-		GVector3f position = light.getPosition();
-        Vector4f eyeSpacePos = new Vector4f(position.getX(), position.getY(), position.getZ(), 1f);
-        Matrix4f.transform(Maths.GMatrixToMatrix(viewMatrix), eyeSpacePos, eyeSpacePos);
-        return new GVector3f(eyeSpacePos.getX(), eyeSpacePos.getY(), eyeSpacePos.getZ());
-	}
-	
-	protected void prepareMaterialedModel(int num, MaterialedModel model, GBasicShader shader) {
-		setMaterial(model.getMaterial());
-		if(shader.hasUniform("specularIntensity"))
-			shader.updateUniform("specularIntensity", model.getMaterial().getSpecularIntensity());
-		if(shader.hasUniform("specularPower"))
-			shader.updateUniform("specularPower", model.getMaterial().getSpecularPower());
-		
-		GL30.glBindVertexArray(model.getModel().getVaoID());
+	protected void prepareModel(BorderedModel model, int num){
+		GL30.glBindVertexArray(model.getVaoID());
 		
 		for(int i=0 ; i<num ; i++)
 			GL20.glEnableVertexAttribArray(i);
-		
 	}
 	
-	protected void disableVertex(int num){
-		for(int i=0 ; i<num ; i++)
-			GL20.glDisableVertexAttribArray(i);
+	protected void prepareMaterial(GBasicShader shader, Material material) {
+		shader.connectTextures();
 		
-		GL30.glBindVertexArray(0);
+		if(material.getDiffuse() != null)
+			material.getDiffuse().bind(GL13.GL_TEXTURE0);
+
+		if(material.getNormal() != null)
+			material.getNormal().bind(GL13.GL_TEXTURE1);
+		
+		
+		shader.updateUniform("specularPower", material.getSpecularPower());
+		shader.updateUniform("specularIntensity", material.getSpecularIntensity());
 	}
 	
 	//OTHERS
@@ -145,24 +150,14 @@ public abstract class GRenderingEngine {
 		return plane;
 	}
 	
-	//SETTERS
-	
-	protected void setMaterial(Material material) {
-		getShader("entityShader").connectTextures();
-		
-		if(material.getDiffuse() != null){
-			GL13.glActiveTexture(GL13.GL_TEXTURE0);
-			material.getDiffuse().bind();
-		}
-		
-		if(material.getNormal() != null){
-			GL13.glActiveTexture(GL13.GL_TEXTURE1);
-			material.getNormal().bind();
-		}
-		
-		getShader("entityShader").updateUniform("specularPower", material.getSpecularPower());
-		getShader("entityShader").updateUniform("specularIntensity", material.getSpecularIntensity());
+	protected GVector3f getEyeSpacePosition(Entity light){
+		GVector3f position = light.getPosition();
+        Vector4f eyeSpacePos = new Vector4f(position.getX(), position.getY(), position.getZ(), 1f);
+        Matrix4f.transform(Maths.GMatrixToMatrix(viewMatrix), eyeSpacePos, eyeSpacePos);
+        return new GVector3f(eyeSpacePos.getX(), eyeSpacePos.getY(), eyeSpacePos.getZ());
 	}
+	
+	//SETTERS
 	
 	protected void setViewMatrix(GMatrix4f matrix) {
 		this.viewMatrix = matrix;

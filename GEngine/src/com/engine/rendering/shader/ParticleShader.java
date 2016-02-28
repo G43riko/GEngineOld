@@ -18,6 +18,9 @@ public class ParticleShader extends GBasicShader{
 	public void getAllUniformsLocations(){
 		uniforms.put("modelViewMatrix", super.getUniformLocation("modelViewMatrix"));
 		uniforms.put("projectionMatrix", super.getUniformLocation("projectionMatrix"));
+		uniforms.put("textOffset1", super.getUniformLocation("textOffset1"));
+		uniforms.put("textOffset2", super.getUniformLocation("textOffset2"));
+		uniforms.put("textCoords", super.getUniformLocation("textCoords"));
 	}
 
 }

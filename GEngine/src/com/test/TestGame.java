@@ -6,6 +6,7 @@ import com.engine.gui.Gui;
 import com.engine.gui.PointLightViewer;
 import com.engine.gui.PosRotScaleViewer;
 import com.engine.particles.Particle;
+import com.engine.particles.ParticleTexture;
 import com.engine.rendering.RenderingEngine;
 import com.engine.water.WaterFrameBuffers;
 
@@ -40,7 +41,7 @@ public class TestGame extends DefaultTest implements GameAble{
 	private Entity dragon, entity;
 	private Viewer viewer;
 	private WindowViewer window;
-	
+	private ParticleTexture particleTexture;
 	public TestGame(Controllable parent) {
 		this.parent = parent;
 		init();
@@ -57,7 +58,7 @@ public class TestGame extends DefaultTest implements GameAble{
 		light.addComponent(new PointLightComponent(new GVector3f(1)/*, new GVector3f(1, 0.1, 0.002)*/));
 		scene.add(light);
 
-		
+		particleTexture = new ParticleTexture(parent.getContentManager().loadTexture("particleAtlas.png"), 4);
 		
 		audio = parent.getContentManager().loadAudio("air_raid.wav", parent.getRenderingEngine().getActCamera());
 		audio.play();
@@ -102,8 +103,8 @@ public class TestGame extends DefaultTest implements GameAble{
 		
 		dragon.setPosition(new GVector3f(x, 0, z));
 		
-
-		parent.getRenderingEngine().add(new Particle(dragon.getPosition(), new GVector3f(Math.random() - 0.5, 5, Math.random() - 0.5), 0.1f, 40, 1, 1));
+		for(int i=0 ; i< 1000 ; i++)
+			parent.getRenderingEngine().add(new Particle(particleTexture, dragon.getPosition(), new GVector3f(Math.random() - 0.5, Math.random() * 2 + 1, Math.random() - 0.5), 0.05f, (float)(Math.random() * 30) + 10, 1, 1));
 	}
 	
 	

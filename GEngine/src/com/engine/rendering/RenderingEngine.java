@@ -3,14 +3,10 @@ package com.engine.rendering;
 import static org.lwjgl.opengl.GL11.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
-import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL30;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 
@@ -19,6 +15,7 @@ import com.engine.core.Screen;
 import com.engine.gui.Gui;
 import com.engine.particles.Particle;
 import com.engine.particles.ParticleManager;
+import com.engine.particles.ParticleTexture;
 import com.engine.rendering.shader.EntityShader;
 import com.engine.rendering.shader.GuiShader;
 import com.engine.rendering.shader.ParticleShader;
@@ -31,22 +28,20 @@ import ggllib.entity.Entity;
 import ggllib.entity.component.ModelAndTextureComponent;
 import ggllib.entity.component.light.PointLightComponent;
 import ggllib.object.skybox.SkyBox;
-import ggllib.render.model.BorderedModel;
 import ggllib.render.model.MaterialedModel;
 import ggllib.render.shader.GBasicShader;
 import ggllib.utils.Maths;
 import glib.util.vector.GMatrix4f;
+import glib.util.vector.GVector2f;
 import glib.util.vector.GVector3f;
 
 public class RenderingEngine extends GRenderingEngine{
-	private Map<MaterialedModel, List<Entity>> entities = new HashMap<MaterialedModel, List<Entity>>();
 	private List<Gui> guis = new ArrayList<Gui>();
 	private List<WaterTile> waters = new ArrayList<WaterTile>();
 	private List<Entity> pointLights = new ArrayList<Entity>();
 	private ParticleManager particles;
 	private SkyBox skybox;
 //	private CoreEngine parent;
-	
 	
 	public RenderingEngine(CoreEngine parent){
 //		this.parent = parent;
@@ -105,10 +100,6 @@ public class RenderingEngine extends GRenderingEngine{
 		particles.add(particle);
 	}
 	
-//	public void add(PointLight light){
-//		pointLights.add(light);
-//	}
-	
 	//UTILS
 	
 	private void loadLights(GBasicShader shader){
@@ -129,21 +120,23 @@ public class RenderingEngine extends GRenderingEngine{
 	//RENDERERS
 
 	public void renderParticles(){
-		GBasicShader shader = getShader("particleShader");
-		shader.bind();
+		GBasicShader shader = getShader("particleShader").bind();
 		
-		GMatrix4f vm = Maths.createViewMatrix(getActCamera().getPosition(), getActCamera().getRotation());
+		prepareModel(ParticleManager.PARTICLE_MODEL, 1);
 		
-		GL30.glBindVertexArray(ParticleManager.PARTICLE_MODEL.getVaoID());	
-		GL20.glEnableVertexAttribArray(0);
 		GL11.glEnable(GL11.GL_BLEND);
-		
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glDepthMask(false);
 		
-		for(Particle p : particles.getParticles()){
-			shader.updateUniform("modelViewMatrix", updateModelViewMatrix(p.getPosition(), p.getRotation(), p.getScale(), vm));
-			GL11.glDrawArrays(GL11.GL_TRIANGLE_STRIP, 0, ParticleManager.PARTICLE_MODEL.getVertexCount());
+		for(ParticleTexture texture : particles.getParticles().keySet()){
+			texture.getTexture().bind(GL13.GL_TEXTURE0);
+			for(Particle p : particles.getParticles().get(texture)){
+				shader.updateUniform("modelViewMatrix", updateModelViewMatrix(p.getPosition(), p.getRotation(), p.getScale()));
+				shader.updateUniform("textOffset1", p.getTextOffset1());
+				shader.updateUniform("textOffset2", p.getTextOffset2());
+				shader.updateUniform("textCoords", new GVector2f(texture.getNumberOfRows(), p.getBlendFactor()));
+				GL11.glDrawArrays(GL11.GL_TRIANGLE_STRIP, 0, ParticleManager.PARTICLE_MODEL.getVertexCount());
+			}
 		}
 
 		GL11.glDepthMask(true);
@@ -151,38 +144,18 @@ public class RenderingEngine extends GRenderingEngine{
 		disableVertex(1);
 	}
 	
-//	public void renderSky(SkyBox sky){
-//		GL11.glDisable(GL11.GL_CULL_FACE);
-////		GL11.glCullFace(GL11.GL_BACK);
-//		
-//		GL13.glActiveTexture(GL13.GL_TEXTURE0);
-//		GBasicShader shader = getShader("skyShader");
-//		shader.bind();
-//		
-//		
-//		shader.updateUniform("transformationMatrix", sky.getTransformationMatrix());
-//		
-//		prepareMaterialedModel(2, sky.getModel(), shader);
-//		
-//		GL11.glDrawElements(GL11.GL_TRIANGLES, sky.getModel().getModel().getVertexCount(),GL11.GL_UNSIGNED_INT, 0);
-//
-//		GL11.glEnable(GL11.GL_CULL_FACE);
-//		GL11.glCullFace(GL11.GL_BACK);
-//		disableVertex(2);
-//	}
-//	
 	public void renderSkyBox(SkyBox sky){
-		GBasicShader shader = getShader("renderSkyBox");
-		shader.bind();
-		viewMatrix.set(3, 0, 0);
-		viewMatrix.set(3, 1, 0);
-		viewMatrix.set(3, 2, 0);
-		shader.updateUniform("viewMatrix", viewMatrix);
+		GBasicShader shader = getShader("renderSkyBox").bind();
+		
+		GMatrix4f vm = new GMatrix4f(viewMatrix);
+		vm.set(3, 0, 0);
+		vm.set(3, 1, 0);
+		vm.set(3, 2, 0);
+		
+		shader.updateUniform("viewMatrix", vm);
 		shader.updateUniform("fogColor", sky.getFogColor());
 		
-		
-		GL30.glBindVertexArray(sky.getModel().getVaoID());
-		GL20.glEnableVertexAttribArray(0);
+		prepareModel(sky.getModel(), 1);
 		GL13.glActiveTexture(GL13.GL_TEXTURE0);
 		GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, sky.getTexture());
 		GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, sky.getModel().getVertexCount());
@@ -195,15 +168,13 @@ public class RenderingEngine extends GRenderingEngine{
 		if(waters.isEmpty())
 			return;
 		
-		GBasicShader shader = getShader("waterShader");
-		shader.bind();
+		GBasicShader shader = getShader("waterShader").bind();
+		prepareModel(WaterTile.getQuad(), 1);
 		
 		shader.connectTextures();
-		
 		shader.updateUniform("viewMatrix", Maths.createViewMatrix(getActCamera().getPosition(), getActCamera().getRotation()));
-		GL30.glBindVertexArray(WaterTile.getQuad().getVaoID());
-		GL20.glEnableVertexAttribArray(0);
 		shader.updateUniform("cameraPosition", getActCamera().getPosition());
+		
 		loadLights(shader);
 		
 //		GL11.glEnable(GL11.GL_BLEND);
@@ -222,7 +193,6 @@ public class RenderingEngine extends GRenderingEngine{
 			GL13.glActiveTexture(GL13.GL_TEXTURE4);
 			GL11.glBindTexture(GL11.GL_TEXTURE_2D, tile.getFbos().getRefractionDepthTexture());
 			
-			
 			Matrix4f modelMatrix = Maths.createTransformationMatrix(new Vector3f(tile.getX(), 
 																				 tile.getHeight(), 
 																				 tile.getZ()), 0, 0, 0, WaterTile.TILE_SIZE);
@@ -230,21 +200,17 @@ public class RenderingEngine extends GRenderingEngine{
 			shader.updateUniform("modelMatrix", Maths.MatrixToGMatrix(modelMatrix));
 			GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, WaterTile.getQuad().getVertexCount());
 		}
-		shader.unbind();
+		disableVertex(1);
 	}
 	
 	public void renderScreen(Screen screen) {
-		GBasicShader shader = getShader("postFxShader");
-		shader.bind();
+		GBasicShader shader = getShader("postFxShader").bind();
 		
-		GL30.glBindVertexArray(screen.getModel().getVaoID());
-		GL20.glEnableVertexAttribArray(0);
-		
+		prepareModel(screen.getModel(), 1);
 
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		
-		GL13.glActiveTexture(GL13.GL_TEXTURE0);
-		screen.getTexture().bind();
+		screen.getTexture().bind(GL13.GL_TEXTURE0);
 		
 		shader.updateUniform("transformationMatrix", screen.getTransformationMatrix());
 		GL11.glDrawArrays(GL11.GL_TRIANGLE_STRIP, 0, screen.getModel().getVertexCount());
@@ -258,16 +224,14 @@ public class RenderingEngine extends GRenderingEngine{
 		if(guis.isEmpty())
 			return;
 		
-		GBasicShader shader = getShader("guiShader");
-		shader.bind();
-		GL30.glBindVertexArray(Gui.getQuad().getVaoID());
-		GL20.glEnableVertexAttribArray(0);
+		GBasicShader shader = getShader("guiShader").bind();
+		prepareModel(Gui.getQuad(), 1);
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		
 		//render
 		for(Gui gui : guis){
-			GL13.glActiveTexture(GL13.GL_TEXTURE0);
-			gui.getTexture().bind();
+			gui.getTexture().bind(GL13.GL_TEXTURE0);
+			
 			shader.updateUniform("transformationMatrix", gui.getTransformationMatrix());
 			GL11.glDrawArrays(GL11.GL_TRIANGLE_STRIP, 0, Gui.getQuad().getVertexCount());
 		}
@@ -277,15 +241,15 @@ public class RenderingEngine extends GRenderingEngine{
 	}
 	
 	private void renderEntities(){
-		GBasicShader shader = getShader("entityShader"); 
-		shader.bind();
+		GBasicShader shader = getShader("entityShader").bind(); 
 		
 		shader.updateUniform("plane", getPlane());
 		shader.connectTextures();
 		loadLights(shader);
 		
 		for(MaterialedModel model : entities.keySet()){
-			prepareMaterialedModel(4, model, shader);
+			prepareMaterial(shader, model.getMaterial());
+			prepareModel(model.getModel(), 4);
 			List<Entity> batch = entities.get(model);
 			for(Entity entity : batch){
 				prepareInstance(shader, entity);
@@ -307,14 +271,12 @@ public class RenderingEngine extends GRenderingEngine{
 			renderSkyBox(skybox);
 		
 		renderParticles();
-		
 	}
 
 	
 	public void update(float delta){
 		getActCamera().update(delta);
-		particles.update(delta);
-		
+		particles.update(delta, getActCamera());
 	}
 	
 //	private void renderToBuffers(WaterTile water){

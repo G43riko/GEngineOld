@@ -2,7 +2,7 @@ package com.engine.gui;
 
 import ggllib.render.material.Texture2D;
 import ggllib.render.model.BorderedModel;
-import ggllib.utils.Loader;
+import ggllib.utils.ContentManager;
 import ggllib.utils.Maths;
 import glib.util.vector.GMatrix4f;
 import glib.util.vector.GVector2f;
@@ -15,13 +15,13 @@ public class Gui {
 	
 	//CONSTRUCTORS
 	
-	public Gui(Loader loader, Texture2D texture, GVector2f position, GVector2f scale){
+	public Gui(ContentManager manager, Texture2D texture, GVector2f position, GVector2f scale){
 		this.position = position;
 		this.texture = texture;
 		this.scale = scale;
 		
 		if(quad == null)
-			quad = loader.loadToVAO(new float[]{-1, 1, -1, -1, 1, 1, 1, -1});
+			quad = manager.loadGuiModel();
 	}
 
 	//OTHERS
