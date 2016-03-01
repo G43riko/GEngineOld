@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
+import org.lwjgl.opengl.GL31;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 
@@ -41,10 +42,10 @@ public class RenderingEngine extends GRenderingEngine{
 	private List<Entity> pointLights = new ArrayList<Entity>();
 	private ParticleManager particles;
 	private SkyBox skybox;
-//	private CoreEngine parent;
+	private CoreEngine parent;
 	
 	public RenderingEngine(CoreEngine parent){
-//		this.parent = parent;
+		this.parent = parent;
 		addShader("entityShader", new EntityShader());
 		addShader("waterShader", new WaterShader());
 		addShader("guiShader", new GuiShader());
@@ -122,7 +123,8 @@ public class RenderingEngine extends GRenderingEngine{
 	public void renderParticles(){
 		GBasicShader shader = getShader("particleShader").bind();
 		
-		prepareModel(ParticleManager.PARTICLE_MODEL, 1);
+		prepareModel(ParticleManager.PARTICLE_MODEL, 6);
+
 		
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
@@ -130,18 +132,22 @@ public class RenderingEngine extends GRenderingEngine{
 		
 		for(ParticleTexture texture : particles.getParticles().keySet()){
 			texture.getTexture().bind(GL13.GL_TEXTURE0);
-			for(Particle p : particles.getParticles().get(texture)){
-				shader.updateUniform("modelViewMatrix", updateModelViewMatrix(p.getPosition(), p.getRotation(), p.getScale()));
-				shader.updateUniform("textOffset1", p.getTextOffset1());
-				shader.updateUniform("textOffset2", p.getTextOffset2());
-				shader.updateUniform("textCoords", new GVector2f(texture.getNumberOfRows(), p.getBlendFactor()));
-				GL11.glDrawArrays(GL11.GL_TRIANGLE_STRIP, 0, ParticleManager.PARTICLE_MODEL.getVertexCount());
+			List<Particle> particleList = particles.getParticles().get(texture);
+			pointer = 0;
+			float[] vboData = new float[particleList.size() * ParticleManager.INSTANCE_DATA_LENGTH];
+			shader.updateUniform("numberOfRows", texture.getNumberOfRows());
+			for(Particle p : particleList){
+				shader.updateUniform("modelViewMatrix", updateModelViewMatrix(p.getPosition(), p.getRotation(), p.getScale(), vboData));
+				updateTextCoordsInfo(p, vboData);
 			}
+			parent.getContentManager().getLoader().updateVBO(particles.getVbo(), vboData, ParticleManager.getBuffer());
+			GL31.glDrawArraysInstanced(GL11.GL_TRIANGLE_STRIP, 0, ParticleManager.PARTICLE_MODEL.getVertexCount(), particleList.size());
+			System.out.println(particleList.size());
 		}
 
 		GL11.glDepthMask(true);
 		GL11.glDisable(GL11.GL_BLEND);
-		disableVertex(1);
+		disableVertex(6);
 	}
 	
 	public void renderSkyBox(SkyBox sky){

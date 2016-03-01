@@ -103,7 +103,7 @@ public class TestGame extends DefaultTest implements GameAble{
 		
 		dragon.setPosition(new GVector3f(x, 0, z));
 		
-		for(int i=0 ; i< 1000 ; i++)
+		for(int i=0 ; i<1 ; i++)
 			parent.getRenderingEngine().add(new Particle(particleTexture, dragon.getPosition(), new GVector3f(Math.random() - 0.5, Math.random() * 2 + 1, Math.random() - 0.5), 0.05f, (float)(Math.random() * 30) + 10, 1, 1));
 	}
 	

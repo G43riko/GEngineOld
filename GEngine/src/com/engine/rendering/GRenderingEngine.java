@@ -24,6 +24,7 @@ import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 import org.lwjgl.util.vector.Vector4f;
 
+import com.engine.particles.Particle;
 import com.engine.water.WaterFrameBuffers;
 
 import ggllib.core.Camera;
@@ -45,6 +46,7 @@ public abstract class GRenderingEngine {
 	private Map<String, Camera> cameras = new HashMap<String, Camera>();
 	private Camera actCamera  = new Camera();
 	private GVector4f plane = new GVector4f(0, -1, 0, 15);
+	protected int pointer;
 	
 	//CONSTRUCTORS
 	
@@ -59,7 +61,7 @@ public abstract class GRenderingEngine {
 	
 	//UTILS
 	
-	protected GMatrix4f updateModelViewMatrix(GVector3f position, float rotation, float scale){
+	protected GMatrix4f updateModelViewMatrix(GVector3f position, float rotation, float scale, float[] vboData){
 		Matrix4f modelMatrix = new Matrix4f();
 		Matrix4f.translate(new Vector3f(position.getX(), position.getY(), position.getZ()), modelMatrix, modelMatrix);
 		modelMatrix.m00 = viewMatrix.get(0, 0);
@@ -75,7 +77,37 @@ public abstract class GRenderingEngine {
 	    Matrix4f.rotate((float)Math.toRadians(rotation), new Vector3f(0, 0, 1), modelMatrix, modelMatrix);
 	    Matrix4f.scale(new Vector3f(scale, scale, scale), modelMatrix, modelMatrix);
 	    
-	    return Maths.MatrixToGMatrix(Matrix4f.mul(Maths.GMatrixToMatrix(viewMatrix), modelMatrix, null));
+	    Matrix4f modelViewMatrix = Matrix4f.mul(Maths.GMatrixToMatrix(viewMatrix), modelMatrix, null);
+	    storeMatrixData(modelViewMatrix, vboData);
+	    return Maths.MatrixToGMatrix(modelViewMatrix);
+	}
+	
+	protected void updateTextCoordsInfo(Particle particle, float[] data){
+		data[pointer++] = particle.getTextOffset1().getX();
+		data[pointer++] = particle.getTextOffset1().getY();
+		data[pointer++] = particle.getTextOffset2().getX();
+		data[pointer++] = particle.getTextOffset2().getY();
+		data[pointer++] = particle.getBlendFactor();
+	}
+	
+	private void storeMatrixData(Matrix4f matrix, float[] vboData){
+		vboData[pointer++] = matrix.m00;
+		vboData[pointer++] = matrix.m01;
+		vboData[pointer++] = matrix.m02;
+		vboData[pointer++] = matrix.m03;
+		vboData[pointer++] = matrix.m10;
+		vboData[pointer++] = matrix.m11;
+		vboData[pointer++] = matrix.m12;
+		vboData[pointer++] = matrix.m13;
+		vboData[pointer++] = matrix.m20;
+		vboData[pointer++] = matrix.m21;
+		vboData[pointer++] = matrix.m22;
+		vboData[pointer++] = matrix.m23;
+		vboData[pointer++] = matrix.m30;
+		vboData[pointer++] = matrix.m31;
+		vboData[pointer++] = matrix.m32;
+		vboData[pointer++] = matrix.m33;
+
 	}
 	
 	protected void init3D(){
