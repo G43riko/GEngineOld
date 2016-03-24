@@ -10,6 +10,7 @@ out vec4 out_Color;
 
 uniform vec3 lightColor[maxLights];
 uniform vec3 attenuation[maxLights];
+uniform vec3 color;
 uniform float specularIntensity;
 uniform float specularPower;
 uniform sampler2D textureSampler;
@@ -47,6 +48,10 @@ void main(){
 	
 	totalDiffuse = max(totalDiffuse, 0.1);
 	
+	
 	out_Color = vec4(totalDiffuse, 1.0) * texture(textureSampler, pass_textureCoords) + vec4(totalSpecular, 1.0);
 	//out_Color = vec4(toLightVector[0], 1.0);
+	
+	if(color != vec3(0, 0, 0))
+		out_Color = vec4(color, 1);
 }

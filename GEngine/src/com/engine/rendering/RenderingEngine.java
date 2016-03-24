@@ -11,6 +11,7 @@ import org.lwjgl.opengl.GL31;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 
+import com.engine.GLine;
 import com.engine.core.CoreEngine;
 import com.engine.core.Screen;
 import com.engine.gui.Gui;
@@ -33,7 +34,6 @@ import ggllib.render.model.MaterialedModel;
 import ggllib.render.shader.GBasicShader;
 import ggllib.utils.Maths;
 import glib.util.vector.GMatrix4f;
-import glib.util.vector.GVector2f;
 import glib.util.vector.GVector3f;
 
 public class RenderingEngine extends GRenderingEngine{
@@ -43,9 +43,13 @@ public class RenderingEngine extends GRenderingEngine{
 	private ParticleManager particles;
 	private SkyBox skybox;
 	private CoreEngine parent;
+	private GLine line;
 	
 	public RenderingEngine(CoreEngine parent){
 		this.parent = parent;
+		
+		line = new GLine(new GVector3f(), new GVector3f(0, 100, 0), parent.getContentManager().getLoader());
+		
 		addShader("entityShader", new EntityShader());
 		addShader("waterShader", new WaterShader());
 		addShader("guiShader", new GuiShader());
@@ -120,6 +124,13 @@ public class RenderingEngine extends GRenderingEngine{
 	
 	//RENDERERS
 
+	public void renderLine(GLine line) {
+		prepareModel(line.getModel(), 1);
+		GL11.glDrawElements(GL11.GL_LINE_STRIP, line.getModel().getVertexCount(),GL11.GL_UNSIGNED_INT, 0);
+		disableVertex(1);
+		
+	}
+	
 	public void renderParticles(){
 		GBasicShader shader = getShader("particleShader").bind();
 		
@@ -252,6 +263,7 @@ public class RenderingEngine extends GRenderingEngine{
 		shader.updateUniform("plane", getPlane());
 		shader.connectTextures();
 		loadLights(shader);
+
 		
 		for(MaterialedModel model : entities.keySet()){
 			prepareMaterial(shader, model.getMaterial());
@@ -259,17 +271,22 @@ public class RenderingEngine extends GRenderingEngine{
 			List<Entity> batch = entities.get(model);
 			for(Entity entity : batch){
 				prepareInstance(shader, entity);
-				GL11.glDrawElements(GL11.GL_TRIANGLES, model.getModel().getVertexCount(), GL11.GL_UNSIGNED_INT, 0);	
+				GL11.glDrawElements(GL11.GL_TRIANGLES, model.getModel().getVertexCount(), GL11.GL_UNSIGNED_INT, 0);
 			}
 			
 			disableVertex(4);
 		}
 	}
 	
+	
 	public void render(){
 //		renderToBuffers(null);
+		
+//		startRenderWireframes();
+		
 		getPlane().set(0, -1, 0, 500000);
 		init3D();
+		renderLine(line);
 		renderWaters();
 		renderEntities();
 		
@@ -277,6 +294,8 @@ public class RenderingEngine extends GRenderingEngine{
 			renderSkyBox(skybox);
 		
 		renderParticles();
+		
+//		stopRenderWireframes();
 	}
 
 	

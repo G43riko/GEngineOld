@@ -4,12 +4,16 @@ import static org.lwjgl.opengl.GL11.GL_BLEND;
 import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
+import static org.lwjgl.opengl.GL11.GL_FILL;
+import static org.lwjgl.opengl.GL11.GL_FRONT_AND_BACK;
+import static org.lwjgl.opengl.GL11.GL_LINE;
 import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA;
 import static org.lwjgl.opengl.GL11.GL_SRC_ALPHA;
 import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
 import static org.lwjgl.opengl.GL11.glBlendFunc;
 import static org.lwjgl.opengl.GL11.glClear;
 import static org.lwjgl.opengl.GL11.glEnable;
+import static org.lwjgl.opengl.GL11.glPolygonMode;
 
 import java.util.HashMap;
 import java.util.List;
@@ -37,7 +41,12 @@ import ggllib.utils.Maths;
 import glib.util.vector.GMatrix4f;
 import glib.util.vector.GVector3f;
 import glib.util.vector.GVector4f;
-
+/*
+ * Start/Stop render wireframes
+ * Start/Stop render textures
+ * Start/Stop render lights
+ * Start/Stop render normals
+ */
 public abstract class GRenderingEngine {
 	protected Map<MaterialedModel, List<Entity>> entities = new HashMap<MaterialedModel, List<Entity>>();
 	private WaterFrameBuffers 	fbos;
@@ -162,6 +171,14 @@ public abstract class GRenderingEngine {
 	}
 	
 	//OTHERS
+
+	protected void startRenderWireframes(){
+		glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+	}
+	
+	protected void stopRenderWireframes(){
+		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+	}
 	
 	public void cleanUp(){
 		if(fbos != null)

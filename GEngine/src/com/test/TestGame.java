@@ -1,5 +1,6 @@
 package com.test;
 
+import com.engine.GLine;
 import com.engine.core.Controllable;
 import com.engine.core.GameAble;
 import com.engine.gui.Gui;
@@ -51,6 +52,7 @@ public class TestGame extends DefaultTest implements GameAble{
 	public void init() {
 		scene = new GScene<Entity>(a -> parent.getRenderingEngine().add(a));
 
+		
 		Entity light;
 		
 		light = new Entity();
@@ -92,7 +94,8 @@ public class TestGame extends DefaultTest implements GameAble{
 		scene.foreach(a -> a.update(delta));
 		audio.update(delta);
 		
-		entity.rotate(new GVector3f(0, 0.1, 0));
+//		entity.rotate(new GVector3f(0, 0.1, 0));
+		
 		
 		Camera camera = parent.getRenderingEngine().getActCamera();
 		GVector3f ray = camera.getMousePicker().getCurrentRay();
